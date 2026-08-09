@@ -19,14 +19,35 @@ interface ImagineProps {
   currentSubjectId: string;
   /** Callback fired when a card is pinned. Parent builds the Library. */
   onPin: (cardId: string) => void;
+  /**
+   * Resolve a district id to its display name, for the pivot chips.
+   *
+   * Optional, and the fallback is the previous behaviour. `pivots.ts` is pure and has no access to the
+   * store, so its `label` is the subject *summary* — a full sentence, which is not a chip. A host that
+   * can reach the store passes this so each chip reads "Biochemistry" with the sentence beneath it.
+   */
+  labelOf?: (districtId: string) => string | undefined;
 }
 
-export function Imagine({ currentSubjectId, onPin }: ImagineProps) {
-  const [selectedPivotId, setSelectedPivotId] = useState<string | null>(null);
+export function Imagine({ currentSubjectId, onPin, labelOf }: ImagineProps) {
+  const pivotOptions = getPivotOptions(currentSubjectId);
+
+  /**
+   * Open on the first pivot rather than on nothing.
+   *
+   * Starting at `null` meant the panel's whole card area was blank until the user guessed that the chips
+   * were clickable — captured at 920x620, roughly two thirds of the panel was empty space below three
+   * small chips, which reads as a broken panel rather than as an invitation. The cards ARE the feature,
+   * so one is shown immediately and the chips then read as "or pivot somewhere else".
+   *
+   * `useState` initialiser, not an effect: an effect would render the empty state for one frame first,
+   * which is the flash of blankness this is meant to remove.
+   */
+  const [selectedPivotId, setSelectedPivotId] = useState<string | null>(
+    () => pivotOptions[0]?.id ?? null,
+  );
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
   const [pinnedCards, setPinnedCards] = useState<Set<string>>(new Set());
-
-  const pivotOptions = getPivotOptions(currentSubjectId);
   const modules = selectedPivotId
     ? buildPivotModules(currentSubjectId, selectedPivotId)
     : [];
@@ -68,17 +89,22 @@ export function Imagine({ currentSubjectId, onPin }: ImagineProps) {
       <div className="imagine-picker">
         <h2 className="imagine-picker__title">Explore Lateral Pivots</h2>
         <div className="imagine-picker__chips">
-          {pivotOptions.map(opt => (
-            <button
-              key={opt.id}
-              className="imagine-chip"
-              onClick={() => handlePivotSelect(opt.id)}
-              aria-pressed={selectedPivotId === opt.id}
-            >
-              <span className="imagine-chip__label">{opt.label}</span>
-              <span className="imagine-chip__reason">{opt.reason}</span>
-            </button>
-          ))}
+          {pivotOptions.map(opt => {
+            const name = labelOf?.(opt.id);
+            return (
+              <button
+                key={opt.id}
+                className="imagine-chip"
+                onClick={() => handlePivotSelect(opt.id)}
+                aria-pressed={selectedPivotId === opt.id}
+                /* The sentence is still reachable, as the tooltip, when the chip shows a name. */
+                title={name ? opt.label : undefined}
+              >
+                <span className="imagine-chip__label">{name ?? opt.label}</span>
+                <span className="imagine-chip__reason">{opt.reason}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

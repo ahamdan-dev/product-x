@@ -40,6 +40,7 @@ import {
   resolveRoute, surfaceDef, panelSlugOf, withPanel, type SurfaceId,
 } from './surfaces';
 import { initialGeometry, panelById, panelBySlug, panelSurfaceId, type PanelId } from './panels';
+import { hashPanel, reconcileOpenPanels } from './openPanels';
 import { usePassthrough } from './usePassthrough';
 import './shell.css';
 
@@ -71,11 +72,18 @@ export function Shell() {
   // switching back instant — and it means the Map's WebGL context is created exactly once.
   const [visited, setVisited] = useState<Set<SurfaceId>>(() => new Set([active]));
 
-  /** Open panels, oldest first. An array rather than a Set so the order a user opened them survives. */
+  /**
+   * Open panels, oldest first. An array rather than a Set so the order a user opened them survives.
+   *
+   * This is the shell's *ordering memory*, not its source of truth: the store decides what is open (see
+   * `openPanels.ts`). A panel can close itself without telling the shell, so this list is reconciled
+   * against the store below rather than trusted on its own.
+   */
   const [openPanels, setOpenPanels] = useState<readonly PanelId[]>([]);
 
   const openSurfaceIn = useApp(st => st.openSurface);
   const closeSurfaceIn = useApp(st => st.closeSurface);
+  const surfaces = useApp(st => st.surfaces);
 
   /**
    * Write the hash without listening to our own write.
@@ -164,6 +172,34 @@ export function Shell() {
   }, [openPanel]);
 
   /**
+   * Adopt closures the shell did not perform.
+   *
+   * `ui/Surface` closes itself — its X and its Escape handler call the store directly, which is right:
+   * a window should not need its host's permission to shut. But then this list still names it, and three
+   * things break at once (measured, all three real before this effect existed): the dock's badge kept
+   * counting a panel that was gone, `togglePanel` read a phantom "open" and spent the next dock click
+   * closing nothing so the panel needed two clicks to return, and the hash went on naming a dismissed
+   * panel so a reload resurrected it.
+   *
+   * `reconcileOpenPanels` returns the same array when nothing changed, which is what keeps this from
+   * looping — it runs on every store change, and a fresh array each time would set state forever.
+   *
+   * `surfaces` is the *trigger*, but the verdict is read fresh from `getState()`, and that distinction is
+   * the difference between working and broken. Effects run in declaration order, so on a cold load at
+   * `#/today/panel/companion` the mount effect above opens the panel in the store and then THIS effect
+   * runs — still holding the `surfaces` object from the render that happened *before* that write. Judging
+   * against the closure therefore concluded the panel was not open and deleted it on the spot: the deep
+   * link rendered a bare surface with no panel and no dock badge. Reading the live store instead sees the
+   * write that just happened.
+   */
+  useEffect(() => {
+    const live = useApp.getState().surfaces;
+    setOpenPanels(prev =>
+      reconcileOpenPanels(prev, id => live[panelSurfaceId(id)]?.open === true),
+    );
+  }, [surfaces]);
+
+  /**
    * Keep the hash in step with the surface and the most recently summoned panel.
    *
    * Derived in an effect rather than written inside every handler, so there is exactly one place the
@@ -171,7 +207,7 @@ export function Shell() {
    * hash never names a panel that is not on screen.
    */
   useEffect(() => {
-    writeHash(active, openPanels.length > 0 ? openPanels[openPanels.length - 1]! : null);
+    writeHash(active, hashPanel(openPanels));
   }, [active, openPanels, writeHash]);
 
   return (

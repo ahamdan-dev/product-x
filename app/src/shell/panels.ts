@@ -68,8 +68,35 @@ export const PANELS: readonly PanelDef[] = [
     slug: 'imagine',
     label: 'Imagine',
     purpose: 'Lateral pivots from what you are studying, as four cards you flip and pin.',
-    width: 920,
-    height: 620,
+    /**
+     * 1060, not 920 — and the width is the lever, not the height.
+     *
+     * Four cards share this row, so the panel's width sets each card's column width, and the column
+     * width sets how many times the text wraps, which sets how TALL the row has to be. Measured on the
+     * running panel (`probeCardFit.cjs`), the tallest of the eight card faces needs:
+     *
+     *     panel 920 -> 209px columns -> 326px of card   (interior 529 vs a 487px body: 42 over)
+     *     panel 1000 -> 229px         -> 304px          (507: 20 over)
+     *     panel 1060 -> 244px         -> 282px          (485: FITS)
+     *     panel 1180 -> 274px         -> 260px          (463: fits, but the panel is then 93% of the
+     *                                                    viewport and stops reading as a floating
+     *                                                    utility at all)
+     *
+     * 1060 is the first width at which the whole interior fits with no scrolling, and it still leaves
+     * the panel clearly floating rather than filling the screen.
+     */
+    width: 1060,
+    /**
+     * 700 is what this asks for; ~543 is what it gets, and that is the point.
+     *
+     * `initialGeometry` clamps height to `vh - TOP_INSET - MARGIN`. This machine's display is 1280x800
+     * DIP, giving a 689px viewport and a 543px ceiling — so the earlier 620 and this 700 both land at
+     * exactly 543 and raising the number changed nothing on screen (which is why two captures at
+     * different window heights came out pixel-identical). The number is kept honest at the height the
+     * content genuinely wants, so that on a display with room the panel does open uncropped; the fit on
+     * a small display is solved by the width above and by the footnote being sticky, not by this.
+     */
+    height: 700,
   },
   {
     id: 'library',

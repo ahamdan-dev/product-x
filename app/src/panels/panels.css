@@ -62,6 +62,24 @@
   padding: var(--x-s-base);
   background: var(--x-panel-well);
   border-radius: var(--x-r-sm);
+  line-height: var(--x-lh-body);
+}
+
+/* The week's reading, above the rows it reads. Sits on the accent's faintest wash so it separates from
+   the list without a second border — the list items already carry wells. */
+.x-activity__summary {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink);
+  line-height: var(--x-lh-body);
+  margin: 0;
+  padding: var(--x-s-base);
+  background: color-mix(in oklab, var(--x-hema) 6%, transparent);
+  border-radius: var(--x-r-sm);
+}
+
+.x-activity__summaryFigure {
+  font-weight: var(--x-w-strong);
+  color: var(--x-hema);
 }
 
 .x-activity__list {
@@ -73,12 +91,15 @@
   gap: var(--x-s-tight);
 }
 
+/* Grid, not flex: the kind column is sized to the widest kind so the district names line up down the
+   list. With flex each row set its own column widths and the eye had nothing to run down. */
 .x-activity__item {
   font-size: var(--x-fs-13);
   color: var(--x-ink);
-  display: flex;
-  align-items: center;
-  gap: var(--x-s-tight);
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--x-s-snug);
   padding: var(--x-s-snug) var(--x-s-base);
   background: var(--x-panel-well);
   border-radius: var(--x-r-xs);
@@ -86,20 +107,37 @@
 
 .x-activity__kind {
   font-weight: var(--x-w-medium);
-}
-
-.x-activity__dot {
-  color: var(--x-ink-3);
+  white-space: nowrap;
 }
 
 .x-activity__district {
   color: var(--x-ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The source is the quietest thing in the row — present for the student who cares which feed an event
+   came from, never competing with the kind. It drops to its own line rather than squeezing the district. */
+.x-activity__source {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: var(--x-fs-11);
+  color: var(--x-ink-3);
 }
 
 .x-activity__time {
+  grid-column: 3;
+  grid-row: 1;
   color: var(--x-ink-3);
-  margin-left: auto;
   font-size: var(--x-fs-12);
+  white-space: nowrap;
+}
+
+.x-activity__more {
+  font-size: var(--x-fs-11);
+  color: var(--x-ink-3);
+  margin: 0;
 }
 
 /* ── Focus Timer ─────────────────────────────────────────────────────────── */
@@ -112,6 +150,15 @@
   padding: var(--x-s-comfy);
   background: var(--x-panel-well);
   border-radius: var(--x-r-md);
+}
+
+/* Says what the clock is for, above the clock. Centred because the whole block is. */
+.x-timer__purpose {
+  font-size: var(--x-fs-12);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-body);
+  text-align: center;
+  margin: 0;
 }
 
 .x-timer__display {
@@ -160,9 +207,11 @@
   margin: 0;
 }
 
-/* ── Study Battery ───────────────────────────────────────────────────────── */
+/* ── Retention ───────────────────────────────────────────────────────────
+   Was ".x-battery". Renamed with the section: a battery depletes as you use it, which is backwards for
+   a measure of how much you can still retrieve. */
 
-.x-battery {
+.x-retention {
   display: flex;
   flex-direction: column;
   gap: var(--x-s-snug);
@@ -171,31 +220,68 @@
   border-radius: var(--x-r-md);
 }
 
-.x-battery__gauge {
+.x-retention__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--x-s-snug);
+}
+
+.x-retention__label {
+  font-size: var(--x-fs-16);
+  font-weight: var(--x-w-strong);
+  color: var(--x-ink);
+}
+
+/* The state tints the word, and only the word — three states, three existing semantic tokens, no new
+   colour invented. "Holding" stays ink: the good case does not need to announce itself. */
+.x-retention__label.is-slipping { color: var(--x-caution); }
+.x-retention__label.is-needs-work { color: var(--x-critical); }
+
+.x-retention__figure {
+  font-size: var(--x-fs-19);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink-2);
+}
+
+.x-retention__gauge {
+  position: relative;
   width: 100%;
   height: 8px;
   background: var(--x-line);
   border-radius: var(--x-r-pill);
   overflow: hidden;
-  position: relative;
 }
 
-.x-battery__fill {
+.x-retention__fill {
   height: 100%;
   background: var(--x-hema);
   border-radius: var(--x-r-pill);
   transition: width var(--x-t-base) var(--x-ease);
 }
 
-.x-battery__label {
-  font-size: var(--x-fs-14);
-  font-weight: var(--x-w-strong);
-  color: var(--x-ink);
+/* The 55% mark — below it, retrieval practice beats rereading. Drawn as a notch through the track so it
+   reads as a threshold on the scale rather than as part of the fill. */
+.x-retention__threshold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 55%;
+  width: 1px;
+  background: var(--x-surface);
+  opacity: 0.9;
 }
 
-.x-battery__text {
+.x-retention__text {
   font-size: var(--x-fs-13);
-  color: var(--x-ink-2);
+  color: var(--x-ink);
+  margin: 0;
+  line-height: var(--x-lh-body);
+}
+
+.x-retention__detail {
+  font-size: var(--x-fs-11);
+  color: var(--x-ink-3);
   margin: 0;
   line-height: var(--x-lh-body);
 }
@@ -228,9 +314,26 @@
   text-transform: uppercase;
   color: var(--x-ink-3);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--x-s-snug);
+}
+
+/* The count sits in the heading as a quiet pill, not as "(2)" in the text. */
+.x-library__count {
+  padding: 0 var(--x-s-tight);
+  font-size: var(--x-fs-11);
+  font-weight: var(--x-w-medium);
+  letter-spacing: normal;
+  color: var(--x-ink-2);
+  background: var(--x-panel-well-2);
+  border-radius: var(--x-r-pill);
 }
 
 .x-library__add {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--x-s-hair);
   padding: var(--x-s-tight) var(--x-s-snug);
   font-size: var(--x-fs-12);
   font-weight: var(--x-w-medium);
@@ -246,21 +349,54 @@
   background: var(--x-line);
 }
 
+/* The +/− carries the open state so the label never has to change. Fixed-width and centred, so the
+   label does not shift sideways by a pixel when the glyph swaps. */
+.x-library__addIcon {
+  display: inline-flex;
+  justify-content: center;
+  width: var(--x-fs-13);
+  color: var(--x-ink-3);
+}
+
 .x-library__picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-tight);
   padding: var(--x-s-base);
   background: var(--x-panel-well);
   border-radius: var(--x-r-sm);
+}
+
+.x-library__pickerLabel {
+  font-size: var(--x-fs-11);
+  font-weight: var(--x-w-medium);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+}
+
+.x-library__pickerNote {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-body);
+  margin: 0;
 }
 
 .x-library__select {
   width: 100%;
   padding: var(--x-s-snug);
   font-size: var(--x-fs-13);
+  font-family: inherit;
   background: var(--x-panel-field);
   color: var(--x-ink);
   border: 1px solid var(--x-line);
   border-radius: var(--x-r-xs);
   cursor: pointer;
+}
+
+.x-library__select:focus-visible {
+  outline: none;
+  border-color: var(--x-hema);
 }
 
 .x-library__empty {
@@ -297,12 +433,30 @@
   gap: var(--x-s-snug);
 }
 
+.x-lib-entry__ident {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-hair);
+  min-width: 0;
+}
+
+/* The subject NAME. Display face and a step up in size, because it is the only thing in the entry that
+   identifies it — the sentence that used to sit here is now the line below. */
 .x-lib-entry__title {
-  font-size: var(--x-fs-14);
-  font-weight: var(--x-w-medium);
+  font-family: var(--x-font-display);
+  font-size: var(--x-fs-16);
+  font-weight: var(--x-w-strong);
+  letter-spacing: var(--x-tr-display);
   color: var(--x-ink);
   margin: 0;
   line-height: var(--x-lh-ui);
+}
+
+.x-lib-entry__summary {
+  font-size: var(--x-fs-12);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-body);
+  margin: 0;
 }
 
 .x-lib-entry__remove {
@@ -327,11 +481,97 @@
   color: var(--x-ink);
 }
 
+/* ── The subject's standing, from the learner model ──────────────────────── */
+
+.x-lib-entry__standing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-tight);
+  padding: var(--x-s-snug) var(--x-s-base);
+  background: var(--x-panel-well-2);
+  border-radius: var(--x-r-xs);
+}
+
+.x-lib-entry__meter {
+  position: relative;
+  width: 100%;
+  height: 5px;
+  background: var(--x-line);
+  border-radius: var(--x-r-pill);
+  overflow: hidden;
+}
+
+.x-lib-entry__meterFill {
+  height: 100%;
+  background: var(--x-hema);
+  border-radius: var(--x-r-pill);
+  transition: width var(--x-t-base) var(--x-ease);
+}
+
+/* The high-water mark. The gap between the fill and this tick is what has decayed — §21.6 says earned
+   development is never visually taken away, so the peak stays drawn even as the fill recedes from it. */
+.x-lib-entry__meterPeak {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-radius: var(--x-r-pill);
+  background: color-mix(in oklab, var(--x-hema) 45%, var(--x-surface));
+}
+
+.x-lib-entry__standingRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--x-s-snug);
+}
+
+.x-lib-entry__state {
+  font-size: var(--x-fs-12);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink);
+}
+
+/* Two states earn a tint; "Holding" and "Building" stay ink. Semantic tokens only. */
+.x-lib-entry__state.is-slipping { color: var(--x-caution); }
+.x-lib-entry__state.is-thin { color: var(--x-ink-3); }
+
+.x-lib-entry__figures {
+  font-size: var(--x-fs-11);
+  color: var(--x-ink-3);
+}
+
+.x-lib-entry__reading {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink);
+  line-height: var(--x-lh-body);
+  margin: 0;
+}
+
+/* The action. Marked with the accent as a left rule rather than coloured text — it is the one line in
+   the entry the student is meant to act on, and a rule says that without shouting. */
+.x-lib-entry__action {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-body);
+  margin: 0;
+  padding-left: var(--x-s-snug);
+  border-left: 2px solid color-mix(in oklab, var(--x-hema) 55%, transparent);
+}
+
 .x-lib-entry__pearl {
   font-size: var(--x-fs-13);
   color: var(--x-ink-2);
   margin: 0;
   line-height: var(--x-lh-body);
+}
+
+.x-lib-entry__notesLabel {
+  font-size: var(--x-fs-11);
+  font-weight: var(--x-w-medium);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  color: var(--x-ink-3);
 }
 
 .x-lib-entry__notes {
@@ -406,24 +646,64 @@
   line-height: var(--x-lh-body);
 }
 
-.x-settings__radio-group {
+/* ── Segmented choice ────────────────────────────────────────────────────
+   Replaces two native `input[type=radio]`, which rendered in the OS accent — bright system blue in a
+   product with exactly one accent, and clearly visible as the wrong colour in the capture. The native
+   input is still there, visually hidden, so keyboard and AT behaviour is the platform's; only the paint
+   is ours. */
+
+.x-settings__choices {
   display: flex;
-  gap: var(--x-s-base);
+  gap: var(--x-s-tight);
+  padding: var(--x-s-hair);
+  background: var(--x-panel-well);
+  border-radius: var(--x-r-sm);
 }
 
-.x-settings__radio {
+.x-choice {
+  flex: 1 1 0;
   display: flex;
   align-items: center;
-  gap: var(--x-s-snug);
+  justify-content: center;
+  padding: var(--x-s-snug) var(--x-s-base);
   font-size: var(--x-fs-13);
-  color: var(--x-ink);
+  color: var(--x-ink-2);
+  border-radius: var(--x-r-xs);
   cursor: pointer;
+  transition: background var(--x-t-fast) var(--x-ease),
+              color var(--x-t-fast) var(--x-ease);
 }
 
-.x-settings__radio input[type="radio"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
+.x-choice:hover {
+  color: var(--x-ink);
+}
+
+/* Clipped to a 1px box rather than `display: none` or `visibility: hidden`: both of those remove the
+   input from the accessibility tree and from the tab order, which would take the keyboard behaviour with
+   them — the entire reason for keeping a native input. */
+.x-choice__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.x-choice.is-on {
+  background: var(--x-panel-field);
+  color: var(--x-ink);
+  font-weight: var(--x-w-medium);
+  box-shadow: var(--x-flat);
+}
+
+/* The focus ring has to be drawn on the label, since the input it belongs to is 1px and clipped. */
+.x-choice:has(.x-choice__input:focus-visible) {
+  outline: 2px solid var(--x-hema);
+  outline-offset: 1px;
 }
 
 /* ── Apple-style toggle ──────────────────────────────────────────────────── */
@@ -434,26 +714,45 @@
   gap: var(--x-s-base);
 }
 
-.x-settings__toggle-row {
+/* ── One evidence source ─────────────────────────────────────────────────── */
+
+.x-source {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--x-s-base);
-  padding: var(--x-s-snug) 0;
+  padding: var(--x-s-snug) var(--x-s-base);
+  background: var(--x-panel-well);
+  border-radius: var(--x-r-xs);
+  transition: opacity var(--x-t-fast) var(--x-ease);
 }
 
-.x-settings__toggle-info {
+/* An excluded source stays legible — it is a state, not a disabled control. Dimming it to unreadable
+   would hide the very information the student turned it off in response to. */
+.x-source.is-off {
+  opacity: 0.55;
+}
+
+.x-source__info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--x-s-hair);
+  min-width: 0;
 }
 
-.x-settings__toggle-label {
+.x-source__name {
   font-size: var(--x-fs-13);
+  font-weight: var(--x-w-medium);
   color: var(--x-ink);
 }
 
-.x-settings__toggle-meta {
+.x-source__note {
+  font-size: var(--x-fs-11);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-body);
+}
+
+.x-source__stats {
   font-size: var(--x-fs-11);
   color: var(--x-ink-3);
 }
@@ -504,27 +803,65 @@
   transform: translateX(20px);
 }
 
+/* The input is 0x0, so the ring goes on the track. Without this the switch is keyboard-operable but
+   gives no sign of where focus is — eleven of them in a column, all identical. */
+.x-toggle input:focus-visible + .x-toggle__track {
+  outline: 2px solid var(--x-hema);
+  outline-offset: 2px;
+}
+
 .x-settings__actions {
   display: flex;
   flex-direction: column;
   gap: var(--x-s-snug);
 }
 
+/* Two-line buttons: the action, then what it does. A destructive control that cannot be undone should
+   say so on the control itself, not in a dialog that appears after you have already committed to reading
+   it. `align-items: start` so the hint wraps left-aligned under the label. */
 .x-settings__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: var(--x-s-hair);
   padding: var(--x-s-snug) var(--x-s-base);
   font-size: var(--x-fs-13);
   font-weight: var(--x-w-medium);
+  font-family: inherit;
   background: var(--x-panel-well);
   color: var(--x-ink);
   border: 1px solid var(--x-line);
   border-radius: var(--x-r-sm);
   cursor: pointer;
   text-align: left;
-  transition: all var(--x-t-fast) var(--x-ease);
+  transition: background var(--x-t-fast) var(--x-ease),
+              border-color var(--x-t-fast) var(--x-ease);
 }
 
 .x-settings__btn:hover {
   background: var(--x-line);
+}
+
+.x-settings__btn:focus-visible {
+  outline: 2px solid var(--x-hema);
+  outline-offset: 1px;
+}
+
+.x-settings__btnLabel {
+  font-weight: var(--x-w-medium);
+}
+
+.x-settings__btnHint {
+  font-size: var(--x-fs-11);
+  font-weight: var(--x-w-body);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-body);
+}
+
+/* Single-line variant for the two buttons inside the confirm, where the question above them is the hint. */
+.x-settings__btn--compact {
+  flex-direction: row;
+  align-items: center;
 }
 
 .x-settings__btn--danger {
@@ -532,9 +869,54 @@
   border-color: color-mix(in oklab, var(--x-critical) 30%, var(--x-line));
 }
 
+/* The hint inherits the danger colour at a lower weight rather than staying neutral grey — on a
+   destructive control the consequence should read as part of the warning. */
+.x-settings__btn--danger .x-settings__btnHint {
+  color: color-mix(in oklab, var(--x-critical) 72%, var(--x-ink-2));
+}
+
 .x-settings__btn--danger:hover {
   background: color-mix(in oklab, var(--x-critical) 8%, var(--x-surface));
   border-color: var(--x-critical);
+}
+
+/* ── The in-panel confirm ────────────────────────────────────────────────
+   Replaces a native `confirm()`, which on a transparent always-on-top overlay can open behind the very
+   window that raised it. Tinted with `--x-critical` so it is unmistakably the destructive branch. */
+
+.x-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+  padding: var(--x-s-base);
+  background: color-mix(in oklab, var(--x-critical) 6%, transparent);
+  border: 1px solid color-mix(in oklab, var(--x-critical) 28%, var(--x-line));
+  border-radius: var(--x-r-sm);
+}
+
+.x-confirm__text {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink);
+  line-height: var(--x-lh-body);
+  margin: 0;
+}
+
+.x-confirm__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--x-s-snug);
+}
+
+/* The outcome of an export or a clear. `--x-positive` because by the time this renders the thing has
+   succeeded; the failure path writes into the same element and reads as a sentence either way. */
+.x-settings__result {
+  font-size: var(--x-fs-12);
+  color: var(--x-ink);
+  line-height: var(--x-lh-body);
+  margin: 0;
+  padding: var(--x-s-snug) var(--x-s-base);
+  background: color-mix(in oklab, var(--x-positive) 8%, transparent);
+  border-radius: var(--x-r-xs);
 }
 
 /* ── SimCatalog ──────────────────────────────────────────────────────────── */
@@ -559,27 +941,129 @@
   gap: var(--x-s-comfy);
 }
 
+/* A deferred feature still gets a real card. The plate at the top is what stops "Coming soon" from
+   reading as "abandoned" — it is the one element here that carries no words at all. */
 .x-sim-card {
-  padding: var(--x-s-comfy);
   background: var(--x-panel-well);
   border-radius: var(--x-r-md);
   display: flex;
   flex-direction: column;
-  gap: var(--x-s-base);
   box-shadow: var(--x-flat);
+  overflow: hidden;
 }
+
+/* ── The drawn plate ─────────────────────────────────────────────────────
+   Aurora light behind a technical line drawing. Aurora is used as LIGHT here, per the token law: it
+   is a gradient behind the art, never a fill on the art and never a text colour. */
+.x-sim-card__plate {
+  position: relative;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 150% at 8% 0%, var(--x-aurora-1) 0%, transparent 62%),
+    radial-gradient(110% 140% at 92% 100%, var(--x-aurora-2) 0%, transparent 58%);
+  border-bottom: 1px solid var(--x-line);
+}
+
+/* The grain, so the plate has the same tooth as the rest of the product rather than reading as a
+   clean vector gradient sitting in an otherwise textured UI. */
+.x-sim-card__plate::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--x-grain);
+  background-size: 160px 160px;
+  opacity: var(--x-grain-opacity);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.x-plate {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* Every stroke inherits this, so the plate has exactly one colour and it comes from a token. */
+  color: var(--x-hema);
+  padding: var(--x-s-snug) var(--x-s-comfy);
+}
+
+/* Structure lines: present, quiet, clearly behind the subject. */
+.x-plate__grid {
+  fill: none;
+  stroke: var(--x-ink-3);
+  stroke-width: 0.5;
+  opacity: 0.42;
+}
+
+/* The subject of the drawing — the trace, the traced structure, the tubule. */
+.x-plate__trace {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.x-plate__nodes circle {
+  fill: currentColor;
+}
+
+.x-plate__orders rect {
+  fill: var(--x-ink-3);
+  opacity: 0.5;
+}
+
+/* The peeled silhouettes. Fill and stroke both, so they read as sheets rather than as outlines. */
+.x-plate__layer {
+  fill: color-mix(in oklab, var(--x-surface) 62%, transparent);
+  stroke: currentColor;
+  stroke-width: 1.1;
+  opacity: 0.72;
+}
+
+.x-plate__medulla {
+  fill: color-mix(in oklab, var(--x-aurora-1) 46%, transparent);
+  stroke: none;
+}
+
+/* ── Card text ───────────────────────────────────────────────────────────── */
 
 .x-sim-card__body {
   display: flex;
   flex-direction: column;
   gap: var(--x-s-snug);
+  padding: var(--x-s-comfy) var(--x-s-comfy) var(--x-s-base);
+}
+
+.x-sim-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--x-s-snug);
 }
 
 .x-sim-card__title {
-  font-size: var(--x-fs-16);
+  font-family: var(--x-font-display);
+  font-size: var(--x-fs-19);
   font-weight: var(--x-w-strong);
+  letter-spacing: var(--x-tr-display);
   color: var(--x-ink);
   margin: 0;
+}
+
+/* Sentence case, not the shouting uppercase chip this used to be. It is a state, not a warning. */
+.x-sim-card__badge {
+  flex: 0 0 auto;
+  padding: var(--x-s-hair) var(--x-s-snug);
+  font-size: var(--x-fs-11);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink-2);
+  background: var(--x-panel-field);
+  border: 1px solid var(--x-line);
+  border-radius: var(--x-r-pill);
+  white-space: nowrap;
 }
 
 .x-sim-card__description {
@@ -589,54 +1073,104 @@
   margin: 0;
 }
 
-.x-sim-card__footer {
-  padding-top: var(--x-s-snug);
+/* Drawn markers rather than list-style discs: a disc sits on the text baseline and drifts on wrap. */
+.x-sim-card__does {
+  list-style: none;
+  margin: var(--x-s-hair) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+}
+
+.x-sim-card__do {
+  position: relative;
+  padding-left: var(--x-s-comfy);
+  font-size: var(--x-fs-13);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink);
+}
+
+.x-sim-card__do::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  /* Centred on the first line's cap height rather than on the block, so it holds on a wrapped item. */
+  top: calc(var(--x-fs-13) * var(--x-lh-body) / 2);
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: var(--x-r-pill);
+  background: var(--x-hema);
+  opacity: 0.55;
+}
+
+/* ── The metadata block: what it draws on, what it writes back ───────────── */
+
+.x-sim-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+  margin-top: var(--x-s-hair);
+  padding-top: var(--x-s-base);
   border-top: 1px solid var(--x-line);
 }
 
-.x-sim-card__status {
-  font-size: var(--x-fs-12);
+.x-sim-card__metaRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--x-s-snug);
+  flex-wrap: wrap;
+}
+
+.x-sim-card__metaKey {
+  flex: 0 0 auto;
+  font-size: var(--x-fs-11);
   font-weight: var(--x-w-medium);
   letter-spacing: var(--x-tr-micro);
   text-transform: uppercase;
   color: var(--x-ink-3);
 }
 
-/* ── Custom scrollbars: hover-only hairlines ─────────────────────────────── */
-
-.x-activity::-webkit-scrollbar,
-.x-library::-webkit-scrollbar,
-.x-settings::-webkit-scrollbar,
-.x-sim-catalog::-webkit-scrollbar {
-  width: 8px;
+.x-sim-card__metaVal {
+  font-size: var(--x-fs-12);
+  color: var(--x-ink-2);
 }
 
-.x-activity::-webkit-scrollbar-track,
-.x-library::-webkit-scrollbar-track,
-.x-settings::-webkit-scrollbar-track,
-.x-sim-catalog::-webkit-scrollbar-track {
-  background: transparent;
+.x-sim-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--x-s-tight);
 }
 
-.x-activity::-webkit-scrollbar-thumb,
-.x-library::-webkit-scrollbar-thumb,
-.x-settings::-webkit-scrollbar-thumb,
-.x-sim-catalog::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: var(--x-r-pill);
-  transition: background var(--x-t-fast) var(--x-ease);
+.x-sim-card__chip {
+  padding: var(--x-s-hair) var(--x-s-snug);
+  font-size: var(--x-fs-11);
+  color: var(--x-ink-2);
+  background: var(--x-panel-field);
+  border: 1px solid var(--x-line);
+  border-radius: var(--x-r-chip);
+  white-space: nowrap;
 }
 
-.x-activity:hover::-webkit-scrollbar-thumb,
-.x-library:hover::-webkit-scrollbar-thumb,
-.x-settings:hover::-webkit-scrollbar-thumb,
-.x-sim-catalog:hover::-webkit-scrollbar-thumb {
-  background: var(--x-line);
+/* The footer says what the sim is waiting on. Sentence case: it is a sentence, not a label. */
+.x-sim-card__footer {
+  padding: var(--x-s-snug) var(--x-s-comfy);
+  background: var(--x-panel-well-2);
+  border-top: 1px solid var(--x-line);
 }
 
-.x-activity::-webkit-scrollbar-thumb:hover,
-.x-library::-webkit-scrollbar-thumb:hover,
-.x-settings::-webkit-scrollbar-thumb:hover,
-.x-sim-catalog::-webkit-scrollbar-thumb:hover {
-  background: var(--x-line-2);
+.x-sim-card__status {
+  font-size: var(--x-fs-11);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-ui);
 }
+
+/* ── No scrollbar rules here, on purpose ─────────────────────────────────────
+ *
+ * This file used to end with ~38 lines of `::-webkit-scrollbar` rules on `.x-activity`, `.x-library`,
+ * `.x-settings` and `.x-sim-catalog`. None of them could ever fire. Per the header note above, these four
+ * roots do not scroll — `.x-surface__body` does, one level up, and it already carries the hover-only
+ * hairline treatment. A scrollbar rule on a non-scrolling element matches nothing, so the rules were
+ * dead weight that read as coverage. Removed rather than left as a decoy.
+ */

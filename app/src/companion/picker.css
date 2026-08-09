@@ -1,139 +1,516 @@
 /**
- * Companion picker styles.
- * Brand: light mode, warm canvas, frosted glass, hairlines, Instrument Sans, --x-hema accent.
+ * Companion picker.
+ *
+ * Every value is a var(--x-*) from styles/tokens.css. No literal hex, radius, duration or font
+ * enters this file — the token layer is the brand, and a call site that invents a value is a bug.
+ *
+ * ── Two structural rules this file obeys ────────────────────────────────────
+ *
+ * 1. FRAME TRANSLUCENT, STAGE OPAQUE. The picker is hosted in a frosted panel floating over the
+ *    student's real desktop, so opacity here is a correctness property, not a taste one: a solid
+ *    fill stacks up into the opaque sheet the glass panel exists to avoid. The card frames are
+ *    therefore the shared translucent panel wells (--x-panel-well / --x-panel-field). The one
+ *    exception is the 3D stage: you cannot judge a model against someone's spreadsheet, so the
+ *    preview well is near-opaque and calm on purpose.
+ *
+ * 2. GLOW IS EMITTED BY STATE. Per the token layer's own law, at most two things glow at once.
+ *    Here exactly one does: the SELECTED card, which is the only element carrying real state.
+ *    Unselected cards are quiet hairline cards with no shadow. Hover raises the frame's light a
+ *    little; it does not add a second glow.
  */
 
-.picker-root {
-  display: flex;
-  gap: var(--x-s-comfy);
-  padding: var(--x-s-loose);
-  align-items: stretch;
-}
+/* ── Root ───────────────────────────────────────────────────────────────── */
 
-.picker-card {
-  flex: 1;
-  min-width: 180px;
-  max-width: 240px;
-  background: var(--x-surface);
-  border-radius: var(--x-r-lg);
-  box-shadow: var(--x-flat);
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  transition: box-shadow var(--x-t-base) var(--x-ease);
+.x-pick {
   display: flex;
   flex-direction: column;
+  gap: var(--x-s-loose);
+  padding: var(--x-s-loose);
+  font-family: var(--x-font-ui);
+  color: var(--x-ink);
+  letter-spacing: var(--x-tr-ui);
+  line-height: var(--x-lh-ui);
 }
 
-.picker-card:focus-visible {
-  outline: 2px solid var(--x-hema);
-  outline-offset: 2px;
+/* ── Heading ────────────────────────────────────────────────────────────── */
+
+.x-pick__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+  max-width: 62ch;
 }
 
-.picker-card.is-selected {
-  box-shadow: var(--x-glow-accent);
+.x-pick__title {
+  margin: 0;
+  font-size: var(--x-fs-28);
+  color: var(--x-ink);
 }
 
-/* Sheen over card */
-.picker-card::before {
+.x-pick__lede {
+  margin: 0;
+  font-size: var(--x-fs-14);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+}
+
+/* ── Stage: one canvas, three cards over it ─────────────────────────────── */
+
+/*
+ * A CONTAINER, not a viewport breakpoint.
+ *
+ * This picker is hosted in a floating panel (`CompanionPanel`) that opens at 800px and can be
+ * dragged down to 280px inside a 1600px window. A `@media (max-width: …)` query asks the WINDOW how
+ * wide it is, so it answers "wide" the entire time the panel is being squeezed into a column — the
+ * layout would never change at the moment it actually needed to. Sizing off the stage itself is the
+ * only signal that tracks the thing the cards are laid out in.
+ */
+.x-pick__stage {
+  position: relative;
+  container-type: inline-size;
+  container-name: pick-stage;
+}
+
+/*
+ * The single shared canvas is stretched across the whole card row and sits BEHIND the cards, so
+ * each card's well is a window onto one continuous 3D scene. This is what makes one WebGL context
+ * possible: the rigs are placed side by side in world space to line up with the wells above them.
+ * It cannot receive pointer events — the cards own all interaction, and this is also the mechanism
+ * that keeps the camera locked, since no controls are mounted and nothing can drag the view.
+ *
+ * NOTE: `position: absolute`, `inset`, and `pointer-events` for this element are set INLINE in
+ * Picker.tsx, not here. R3F writes its own inline style on the container and inline always beats a
+ * stylesheet, so those four declarations have to be passed through its `style` prop to take effect.
+ * They are deliberately not duplicated here — a dead rule that looks authoritative is worse than no
+ * rule, because the next person edits it and nothing happens.
+ */
+/*
+ * IN FRONT of the cards, masked to the wells — not behind them.
+ *
+ * This was `--x-z-world` (behind), which is why the companions rendered as ghosts: the card's
+ * `--x-panel-well` at 62% opacity and the well's own veil at 68% both sat over the render, and a
+ * mid-grey limb composited to roughly 208 of 255. The card material cannot be dropped — the frame is
+ * the design — so the canvas comes forward instead and `clip-path` (set inline from the measured well
+ * boxes in Picker.tsx) restricts it to the windows it is allowed to paint. Everything outside a well
+ * is still card.
+ *
+ * Safe because the element cannot receive pointer events, so nothing it covers becomes unclickable.
+ * `--x-z-surface` puts it one step above `--x-z-card`, keeping it under chrome, popovers and toasts.
+ */
+.x-pick__canvas {
+  z-index: var(--x-z-surface);
+  border-radius: var(--x-r-lg);
+}
+
+.x-pick__cards {
+  position: relative;
+  z-index: var(--x-z-card);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--x-s-base);
+  /* The rigs' world positions are derived from these cards' measured geometry, so the grid is the
+     single source of truth for the layout. Changing the column count here means changing it
+     nowhere else — the measurement follows. */
+}
+
+/*
+ * The canvas overlays the stage, and the camera framing is solved against the stage box, so the
+ * stage must be exactly as tall as one card and no taller. Its only in-flow child is the card grid
+ * (the canvas is absolute), which gives that for free — this rule just states the intent, since a
+ * future absolutely-positioned sibling would silently break the correspondence.
+ */
+.x-pick__stage > .x-pick__cards {
+  margin: 0;
+}
+
+/* The narrow layout lives at the END of this file, not here — see "Narrow" below. A container query
+   adds no specificity, so a stacked-layout rule placed above the rules it overrides simply loses to
+   them. */
+
+/* ── A companion card ───────────────────────────────────────────────────── */
+
+.x-pick__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-base);
+  padding: var(--x-s-base);
+  border-radius: var(--x-r-lg);
+  /* Translucent, so the host panel stays glass. */
+  background: var(--x-panel-well);
+  box-shadow: var(--x-flat);
+  cursor: pointer;
+  transition:
+    box-shadow var(--x-t-base) var(--x-ease-soft),
+    background var(--x-t-base) var(--x-ease-soft),
+    transform var(--x-t-base) var(--x-ease);
+}
+
+/* Light catching the curve — the same top-edge sheen .x-card uses, so a picker card and a content
+   card read as the same material. */
+.x-pick__card::before {
   content: '';
   position: absolute;
   inset: 0 0 auto;
   height: 42%;
+  border-radius: inherit;
   background: var(--x-lit-sheen);
   pointer-events: none;
-  z-index: 1;
 }
 
-/* Canvas preview area */
-.picker-preview {
-  flex: 1;
-  min-height: 200px;
+.x-pick__card:hover {
+  background: var(--x-panel-well-2);
+}
+
+.x-pick__card:focus-visible {
+  outline: none;
+  box-shadow: var(--x-glow-accent);
+}
+
+/*
+ * SELECTED — the one glowing thing on this surface. Three-part internal glow from the token layer
+ * (inner highlight, tight ring, wide bloom), which is what separates "lit from within" from a neon
+ * outline. It also lifts by 1px: the choice should feel like it came forward.
+ */
+.x-pick__card.is-selected {
+  background: var(--x-panel-field);
+  box-shadow: var(--x-glow-accent);
+  transform: translateY(-1px);
+}
+
+/* ── The window onto the 3D scene ───────────────────────────────────────── */
+
+/*
+ * The shared canvas lives BEHIND the cards, so a stock card's well has to be a genuine WINDOW — and
+ * "window" has to mean it, because anything opaque here is painted straight over the figure.
+ *
+ * This rule used to end in `var(--x-veil)`, which is `rgba(245,244,242,.68)`. That is a 68% opaque
+ * near-white sheet laid over the render, so every companion arrived at 32% strength: a mid-grey limb
+ * composites to 0.32·128 + 0.68·245 ≈ 208, and both figures read as ghosts seen THROUGH the card
+ * rather than standing in it. Confirmed in a capture before and after.
+ *
+ * The aurora wash stays, because the figure does need somewhere to stand rather than a grey void, but
+ * it is now the only thing here and it is kept faint and pushed to the edges: a warm floor-glow under
+ * the feet and a cool bloom in the top corner, with the centre — where the body is — left clear.
+ * `background-color` is deliberately absent, not transparent-by-token: a future token swap must not be
+ * able to reintroduce a sheet over the canvas.
+ */
+.x-pick__well {
   position: relative;
-  background: var(--x-surface-2);
+  aspect-ratio: 4 / 5;
+  border-radius: var(--x-r-md);
+  background:
+    radial-gradient(85% 42% at 50% 99%,
+      color-mix(in oklab, var(--x-aurora-4) 30%, transparent) 0%, transparent 72%),
+    radial-gradient(58% 44% at 82% 4%,
+      color-mix(in oklab, var(--x-aurora-2) 22%, transparent) 0%, transparent 68%);
+  box-shadow: var(--x-flat);
   overflow: hidden;
 }
 
-.picker-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* Label and attribution */
-.picker-label {
-  padding: var(--x-s-base) var(--x-s-comfy);
-  text-align: center;
-  font-weight: var(--x-w-medium);
-  font-size: var(--x-fs-14);
-  color: var(--x-ink);
-  z-index: 2;
-  position: relative;
-}
-
-.picker-attribution {
-  padding: var(--x-s-snug) var(--x-s-comfy) var(--x-s-base);
-  font-size: var(--x-fs-11);
-  color: var(--x-ink-3);
-  text-align: center;
-  z-index: 2;
-  position: relative;
-}
-
-/* Custom upload card */
-.picker-card.is-custom {
-  cursor: default;
-}
-
-.picker-upload-zone {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--x-s-comfy);
-  gap: var(--x-s-base);
-  min-height: 200px;
-}
-
-.picker-upload-label {
-  font-weight: var(--x-w-medium);
-  font-size: var(--x-fs-14);
-  color: var(--x-ink);
-  cursor: pointer;
-  padding: var(--x-s-snug) var(--x-s-comfy);
-  border-radius: var(--x-r-sm);
-  border: 1px solid var(--x-line);
-  background: var(--x-surface);
-  transition: border-color var(--x-t-fast) var(--x-ease);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--x-s-tight);
-}
-
-.picker-upload-label:hover {
-  border-color: var(--x-hema);
-}
-
-.picker-upload-input {
+/* Ground line: a soft hairline the figure stands on, so it reads as placed rather than floating. */
+.x-pick__well::after {
+  content: '';
   position: absolute;
-  width: 1px;
+  inset: auto var(--x-s-comfy) 14%;
   height: 1px;
-  opacity: 0;
+  background: linear-gradient(90deg,
+    transparent 0%, var(--x-line-2) 22%, var(--x-line-2) 78%, transparent 100%);
+  opacity: .7;
   pointer-events: none;
 }
 
-.picker-upload-hint {
-  font-size: var(--x-fs-12);
-  color: var(--x-ink-3);
-  text-align: center;
-  line-height: var(--x-lh-body);
+/* ── Card meta ──────────────────────────────────────────────────────────── */
+
+.x-pick__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--x-s-snug);
 }
 
-.picker-error {
+.x-pick__name {
+  font-size: var(--x-fs-16);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink);
+}
+
+.x-pick__sub {
   font-size: var(--x-fs-12);
-  color: var(--x-critical);
+  color: var(--x-ink-2);
+}
+
+/* An honest note about a rig whose animation could not be shown. Quiet: it is information, not an
+   error the student caused. */
+.x-pick__note {
+  font-size: var(--x-fs-11);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+}
+
+/* ── Selected tick ──────────────────────────────────────────────────────── */
+
+.x-pick__check {
+  position: absolute;
+  top: var(--x-s-base);
+  right: var(--x-s-base);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--x-r-pill);
+  background: var(--x-hema);
+  opacity: 0;
+  transform: scale(.8);
+  transition:
+    opacity var(--x-t-fast) var(--x-ease-soft),
+    transform var(--x-t-base) var(--x-ease);
+  pointer-events: none;
+}
+
+.x-pick__card.is-selected .x-pick__check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.x-pick__check svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--x-surface);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Custom import card ─────────────────────────────────────────────────── */
+
+.x-pick__card--import {
+  cursor: default;
+}
+
+.x-pick__drop {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--x-s-base);
+  padding: var(--x-s-comfy);
   text-align: center;
-  padding: 0 var(--x-s-snug);
+  border-radius: var(--x-r-md);
+  /* A dashed hairline is the one honest affordance for "put something here". */
+  border: 1px dashed var(--x-line-2);
+  background: var(--x-panel-field);
+  min-height: 0;
+}
+
+.x-pick__dropicon {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: var(--x-ink-3);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.x-pick__browse {
+  font-family: var(--x-font-ui);
+  font-size: var(--x-fs-13);
+  font-weight: var(--x-w-medium);
+  letter-spacing: var(--x-tr-ui);
+  color: var(--x-surface);
+  background: var(--x-pill);
+  border: none;
+  border-radius: var(--x-r-pill);
+  padding: var(--x-s-snug) var(--x-s-comfy);
+  cursor: pointer;
+  transition: background var(--x-t-fast) var(--x-ease-soft);
+}
+
+.x-pick__browse:hover:not(:disabled) { background: var(--x-pill-hi); }
+.x-pick__browse:disabled { opacity: .55; cursor: progress; }
+.x-pick__browse:focus-visible { outline: none; box-shadow: var(--x-glow-accent); }
+
+.x-pick__hint {
+  margin: 0;
+  font-size: var(--x-fs-12);
   line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+}
+
+/* The real input is driven by the button, but must stay reachable by a keyboard and a screen
+   reader — so it is clipped, never `display: none`. */
+.x-pick__file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Validator output ───────────────────────────────────────────────────── */
+
+.x-pick__report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+  padding: var(--x-s-base) var(--x-s-comfy);
+  border-radius: var(--x-r-md);
+  background: var(--x-panel-well);
+  box-shadow: var(--x-flat);
+  font-size: var(--x-fs-13);
+}
+
+.x-pick__reportHead {
+  margin: 0;
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink);
+}
+
+.x-pick__report.is-ok  { background: var(--x-hema-wash); }
+.x-pick__report.is-bad { background: var(--x-panel-well-2); }
+
+.x-pick__issues {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+}
+
+/* The validator's own wording, rendered in full. These messages name the measured number and the
+   fix, so wrapping is correct and truncation would destroy their whole purpose. */
+.x-pick__issue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--x-s-snug);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+}
+
+/* Which rule fired, as data. */
+.x-pick__rule {
+  flex: none;
+  font-size: var(--x-fs-11);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  padding: var(--x-s-hair) var(--x-s-tight);
+  border-radius: var(--x-r-xs);
+  background: var(--x-surface-2);
+  color: var(--x-ink-3);
+}
+
+/* An error blocks the import; a warning does not. That difference has to be visible, and it is
+   carried by the rule chip rather than by colouring the whole message — the message itself stays
+   body ink so it remains readable. */
+.x-pick__issue.is-error .x-pick__rule {
+  background: color-mix(in oklab, var(--x-critical) 14%, var(--x-surface));
+  color: var(--x-critical);
+}
+
+.x-pick__issue.is-warning .x-pick__rule {
+  background: color-mix(in oklab, var(--x-caution) 16%, var(--x-surface));
+  color: var(--x-caution);
+}
+
+/* ── Attribution — a licence term, not a footnote ───────────────────────── */
+
+/*
+ * The animation pack is CC BY 4.0, which obliges us to credit the author wherever the work is
+ * shown. Styled to be legible rather than hidden: --x-ink-2 clears AA at this size, where
+ * --x-ink-3 is marked non-text-only in the token layer.
+ */
+.x-pick__credit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--x-s-snug);
+  padding-top: var(--x-s-base);
+  border-top: 1px solid var(--x-line);
+  font-size: var(--x-fs-12);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+}
+
+.x-pick__creditLink {
+  color: var(--x-hema);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  border-radius: var(--x-r-xs);
+}
+
+.x-pick__creditLink:hover { color: var(--x-hema-deep); }
+.x-pick__creditLink:focus-visible { outline: none; box-shadow: var(--x-glow-accent); }
+
+/* ── Narrow: the preview turns landscape rather than disappearing ────────── */
+
+/*
+ * Under 620px of STAGE width, three columns are ~190px each and a companion becomes a sliver, so the
+ * cards stack. The well then has to change shape, because the portrait ratio it keeps at full width
+ * is actively wrong in a column: a stacked card is as wide as the panel, so `aspect-ratio: 3 / 4`
+ * measured 410x546px — three of those pushed the import card 1431px down a 404px panel body, and the
+ * user would scroll past a full screen of near-empty preview to reach it.
+ *
+ * Landscape is what fits, and it happens to be the better shot. `placeRigInWindow` contains the
+ * figure on whichever axis binds, so in a 5:2 well the rig is height-constrained and simply reads
+ * smaller and wider — no clipping, no code change, and the live 3D preview survives at every size.
+ * Dropping the canvas here was considered and rejected: a live companion is the thing being chosen,
+ * and a picker that shows two names and no faces is not the same product.
+ *
+ * This block is LAST in the file on purpose — a container query carries no extra specificity, so it
+ * has to come after the rules it overrides.
+ */
+@container pick-stage (max-width: 620px) {
+  .x-pick__cards { grid-template-columns: minmax(0, 1fr); }
+
+  /* Wide and short: enough height to read a figure, little enough to keep three cards on a screen. */
+  .x-pick__well { aspect-ratio: 5 / 2; }
+
+  /* The tick would otherwise sit over the figure's head in a short well. */
+  .x-pick__check { top: 50%; transform: translateY(-50%) scale(.8); }
+  .x-pick__card.is-selected .x-pick__check { transform: translateY(-50%) scale(1); }
+}
+
+/* Narrower still: below ~380px even a landscape figure is unreadable, and the import card's dashed
+   drop zone is the only thing worth the space. The preview collapses to nothing — not a void. */
+@container pick-stage (max-width: 380px) {
+  .x-pick__well { display: none; }
+  .x-pick__card { flex-direction: row; align-items: center; gap: var(--x-s-comfy); }
+  .x-pick__meta {
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--x-s-hair);
+  }
+  .x-pick__card--import { flex-direction: column; }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────── */
+
+/* The token layer already neutralises animation globally; these are the transforms this file adds
+   on top, which are the ones that read as movement rather than as a state change. */
+@media (prefers-reduced-motion: reduce) {
+  .x-pick__card,
+  .x-pick__card.is-selected { transform: none; }
+  .x-pick__check { transition: opacity var(--x-t-fast) var(--x-ease-soft); }
+}
+
+/* The narrow layout re-centres the tick with a translate, and the reduced-motion reset above must not
+   flatten that back onto the corner: the scale is the animation, the centring is layout. Ordered
+   after both, since at equal specificity whichever came last would otherwise win. */
+@container pick-stage (max-width: 620px) {
+  @media (prefers-reduced-motion: reduce) {
+    .x-pick__check,
+    .x-pick__card.is-selected .x-pick__check { transform: translateY(-50%); }
+  }
 }

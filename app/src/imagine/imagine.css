@@ -33,19 +33,41 @@
   gap: var(--x-s-snug);
 }
 
+/**
+ * A chip is sized by its content.
+ *
+ * It used to carry `min-width: 220px` while its label was a full subject *sentence*, so inside a panel
+ * every pivot rendered as a full-width stacked card and the row of choices read as a list of documents.
+ * The label is now a district name, so the chip can size to it — and no min-width means three pivots sit
+ * on one line at panel width and wrap only when they genuinely must.
+ */
 .imagine-chip {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--x-s-base) var(--x-s-comfy);
+  padding: var(--x-s-snug) var(--x-s-base);
   background: var(--x-surface);
   border-radius: var(--x-r-chip);
   box-shadow: var(--x-flat);
   cursor: pointer;
-  transition: all var(--x-t-fast) var(--x-ease);
+  transition:
+    box-shadow var(--x-t-fast) var(--x-ease),
+    transform var(--x-t-fast) var(--x-ease),
+    background var(--x-t-fast) var(--x-ease);
   border: none;
   text-align: left;
-  min-width: 220px;
+}
+
+/* The chosen pivot has to be legible as chosen — the cards below it are otherwise unexplained.
+   `--x-hema-edge` is a colour, not a shadow, so it is drawn as a ring here rather than passed whole. */
+.imagine-chip[aria-pressed='true'] {
+  background: var(--x-hema-wash);
+  box-shadow: inset 0 0 0 1px var(--x-hema-edge);
+}
+
+.imagine-chip:focus-visible {
+  outline: 2px solid var(--x-hema);
+  outline-offset: 2px;
 }
 
 .imagine-chip:hover {

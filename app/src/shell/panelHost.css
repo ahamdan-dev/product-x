@@ -56,6 +56,50 @@
   .x-panelHost__panel > .x-surface.is-glass { background: var(--x-panel-bg); }
 }
 
+/**
+ * ── The scroll track appears on hover, not at rest ────────────────────────────
+ *
+ * `ui/surface.css` paints the body's scrollbar thumb unconditionally (`background: var(--x-line)`). On a
+ * page that is a reasonable default; on these panels it put a permanent light bar down the right edge —
+ * visible in the Simulations capture — and a visible scrollbar track is the specific thing that reads as
+ * cheap here. Scoped to panels so the change cannot alter any other surface in the product, and only the
+ * *resting* appearance changes: the scrollbar keeps its width, so nothing reflows when it fades in, and it
+ * is fully visible whenever the pointer is anywhere in the panel or focus is inside it.
+ *
+ * Keyboard-only and touch users never hover, so both get it unconditionally below.
+ */
+.x-panelHost__panel > .x-surface .x-surface__body {
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color var(--x-t-fast) var(--x-ease);
+}
+
+.x-panelHost__panel > .x-surface:hover .x-surface__body,
+.x-panelHost__panel > .x-surface:focus-within .x-surface__body {
+  scrollbar-color: var(--x-line) transparent;
+}
+
+.x-panelHost__panel > .x-surface .x-surface__body::-webkit-scrollbar-thumb {
+  background: transparent;
+  transition: background var(--x-t-fast) var(--x-ease);
+}
+
+.x-panelHost__panel > .x-surface:hover .x-surface__body::-webkit-scrollbar-thumb,
+.x-panelHost__panel > .x-surface:focus-within .x-surface__body::-webkit-scrollbar-thumb {
+  background: var(--x-line);
+}
+
+.x-panelHost__panel > .x-surface .x-surface__body::-webkit-scrollbar-thumb:hover {
+  background: var(--x-ink-3);
+}
+
+/* No hover to reveal it with, so it stays visible. */
+@media (hover: none) {
+  .x-panelHost__panel > .x-surface .x-surface__body { scrollbar-color: var(--x-line) transparent; }
+  .x-panelHost__panel > .x-surface .x-surface__body::-webkit-scrollbar-thumb {
+    background: var(--x-line);
+  }
+}
+
 /* ── Panel-specific interiors ─────────────────────────────────────────────────
    Only the two adapters need any: the other four panels bring their own from panels.css. */
 
@@ -63,16 +107,34 @@
   display: flex;
   flex-direction: column;
   gap: var(--x-s-base);
+
+  /**
+   * Card height, measured rather than guessed.
+   *
+   * `.imagine-card-content` is `overflow-y: auto`, so a card that is too short does not truncate
+   * visibly — it silently becomes a tiny scroll region, which is the worse failure: the student cannot
+   * tell there is more text. Measured in the running panel at the four-column width, the longest of the
+   * four modules ("High-Yield Pearl") reported scrollHeight 272 against clientHeight 226, so it needed
+   * 46px more than the 300px the cards had. 346px clears the longest real module with the others padded
+   * to match, and no card scrolls.
+   *
+   * A local custom property rather than a repeated literal so the two rules below cannot drift apart.
+   * Not in tokens.css: this is one panel's content measurement, not a design token, and tokens.css is
+   * not mine to edit.
+   */
+  --x-imagine-card-h: 346px;
 }
 
 /* Where the pivot is coming from. Context, so it is quiet — but the subject itself is emphasised,
-   because that is the one word the learner needs to verify at a glance. */
+   because that is the one word the learner needs to verify at a glance.
+   Translucent, like every other well in a panel: a solid fill here was a bar of opaque paint across the
+   top of a pane that is meant to be glass. */
 .x-imagine-panel__from {
   font-size: var(--x-fs-13);
   line-height: var(--x-lh-body);
   color: var(--x-ink-2);
   padding: var(--x-s-snug) var(--x-s-base);
-  background: var(--x-surface-2);
+  background: var(--x-panel-well);
   border-radius: var(--x-r-sm);
 }
 
@@ -81,14 +143,140 @@
   color: var(--x-ink);
 }
 
-/* What is NOT built, stated plainly. Sits above a hairline so it reads as a footnote to the panel
-   rather than as an error inside it. */
+/* The subject sentence, demoted to a second line. It is a reminder, not the heading — the district
+   name above it is what the learner actually recognises. */
+.x-imagine-panel__summary {
+  display: block;
+  color: var(--x-ink-3);
+}
+
+/**
+ * `Imagine` was written as a page and is hosted here as a panel.
+ *
+ * Its own root carries `--x-s-loose` padding and `max-width: 1100px; margin: 0 auto`, which inside an
+ * already-padded surface body produced a visible moat and left the content centred in a narrower column
+ * than the panel. And its flip cards are a fixed 340px tall, which is most of a panel's height before
+ * any of the four is read. Both are host concerns, so both are corrected here rather than by editing the
+ * finished component.
+ */
+.x-imagine-panel .imagine-root {
+  padding: 0;
+  max-width: none;
+  /**
+   * `margin: 0`, and it is not cosmetic — it is why the cards were 162px wide.
+   *
+   * `.imagine-root` ships `max-width: 1100px; margin: 0 auto` to centre itself on a page. Overriding
+   * only the `max-width` left the auto margins behind, and in a flex column an item with auto
+   * cross-axis margins is NOT stretched (per flexbox: stretch applies only when the cross size is auto
+   * *and* neither cross margin is auto). So the root fell back to fit-content and measured 685px inside
+   * an 875px host — 190px of width silently handed to two invisible auto margins. Divided by four
+   * columns that is what produced 162px tracks, a 130px text column, and the 126px of hidden vertical
+   * overflow inside the longest card. The overflow was a width bug the whole time.
+   */
+  margin: 0;
+  gap: var(--x-s-base);
+}
+
+/**
+ * The card is as tall as the longest of the four, not a fixed 260px.
+ *
+ * A flip card needs a definite height — the two faces are stacked with `position: absolute`, so there is
+ * no content to size the box from. But 260px was a guess, and the "High-Yield Pearl" module's text ran
+ * past it and was cut mid-sentence ("Learn the step and you get the…") in the capture. Truncated study
+ * material is worse than a taller card.
+ *
+ * So the GRID gets the definite height instead of each card: `grid-auto-rows: 1fr` plus a row height
+ * driven by the tallest cell means all four stay equal (a ragged row of flip cards looks broken) while
+ * the row itself grows to fit the longest text. `min-height` rather than `height` so a short pivot's
+ * cards do not stretch into empty space.
+ */
+.x-imagine-panel .imagine-cards {
+  grid-auto-rows: 1fr;
+  min-height: var(--x-imagine-card-h);
+}
+
+.x-imagine-panel .imagine-card-container {
+  height: 100%;
+  min-height: var(--x-imagine-card-h);
+}
+
+/**
+ * All four cards on one row.
+ *
+ * There are exactly four modules per pivot — that is the feature, "four cards you flip and pin" — so the
+ * count is known and `auto-fit` is the wrong tool for it. `auto-fit` with a 220px floor packed three
+ * across in the 920px panel and wrapped the fourth onto a second row, where it sat below the fold and
+ * had to be scrolled to; a set of four that presents as "three and something hidden" undersells itself.
+ * Four explicit columns keep the set legible as a set, and `minmax(0, 1fr)` (not `1fr`, whose implicit
+ * `auto` minimum floors a track at its content width) is what actually lets them share the row evenly
+ * instead of overflowing.
+ *
+ * Below 760px four columns would be slivers, so they fall back to auto-fit and wrap honestly.
+ */
+.x-imagine-panel .imagine-cards {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--x-s-base);
+}
+
+@media (max-width: 760px) {
+  .x-imagine-panel .imagine-cards {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  }
+}
+
+/* The picker heading is a page-level h2 inside a panel that already has a title bar saying "Imagine". */
+.x-imagine-panel .imagine-picker__title {
+  font-size: var(--x-fs-14);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink-3);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+}
+
+/**
+ * What is NOT built, stated plainly — and pinned, so it cannot scroll away.
+ *
+ * ── Why this is sticky and not just the last element ──────────────────────────
+ *
+ * This line is the panel's honest disclosure: pins are session-only and the Library does not receive
+ * them. Measured, it was sitting 63px BELOW THE FOLD — present in the DOM, invisible on screen, which is
+ * the worst of both worlds: the claim is made silently and the caveat needs a scroll nobody knows to do.
+ *
+ * The obvious fix — make the panel taller — cannot work, and the measurement is why. This display is
+ * 1280x800 DIP, so `initialGeometry` clamps the panel to `vh - 146` = 543px no matter what `panels.ts`
+ * asks for; the 620 and the 700 both landed at 543. And at the 480px width the brief requires, four cards
+ * stack into a single column and the interior is several times the body height, so NO panel height and no
+ * panel width makes this fit at every size. A height was never going to be the answer.
+ *
+ * `position: sticky; bottom: 0` is, because it makes the guarantee structural instead of arithmetic: the
+ * disclosure is on screen at every viewport, at every panel size, at every scroll position, without
+ * depending on the content above it fitting. It needs a fill of its own so the cards do not read through
+ * the text as they pass under it — `--x-panel-bg` is the near-opaque panel fill that already exists for
+ * exactly this "glass, but text must stay legible" case, with the blur to soften the seam. The hairline
+ * that already read as a footer rule now doubles as the edge of the pinned strip.
+ *
+ * `margin-top: auto` keeps it at the bottom of a short panel rather than floating up under the cards.
+ */
 .x-imagine-panel__honest {
   font-size: var(--x-fs-12);
   line-height: var(--x-lh-body);
   color: var(--x-ink-3);
   padding-top: var(--x-s-snug);
   border-top: 1px solid var(--x-line);
+
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  /* Pulled out to the body's padding edge so the strip spans the full width and nothing shows in the
+     gutter beside it, then padded back in so the text keeps its original left edge. */
+  margin-left: calc(-1 * var(--x-s-comfy));
+  margin-right: calc(-1 * var(--x-s-comfy));
+  padding-left: var(--x-s-comfy);
+  padding-right: var(--x-s-comfy);
+  padding-bottom: var(--x-s-snug);
+  background: var(--x-panel-bg);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
 /* The companion picker is a fixed-height row of 3D previews; it manages its own internal padding. */
@@ -97,12 +285,55 @@
   min-height: 0;
 }
 
-/* The picker's own padding assumes a page, not a panel — trim it so the cards are not floating in a
-   moat inside an already-padded surface body. */
-.x-companion-panel .picker-root {
+/**
+ * The picker's own padding assumes a page, not a panel — trim it so the cards are not floating in a
+ * moat inside an already-padded surface body.
+ *
+ * Two class names, deliberately. The companion picker is being rewritten concurrently by another agent
+ * and is mid-rename from `.picker-*` to `.x-pick*`; whichever set of names survives, the panel interior
+ * still gets trimmed. These are host-side layout concerns only — the picker owns its own appearance.
+ */
+.x-companion-panel .picker-root,
+.x-companion-panel .x-pick {
   padding: 0;
   flex: 1;
+  min-width: 0;
+}
+
+.x-companion-panel .picker-root {
   flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/**
+ * The card is the frame; the 3D preview inside it is the stage.
+ *
+ * Cards default to a solid `--x-surface`, which is right on a page and wrong in a glass panel — a few
+ * opaque rectangles filling the panel restack to exactly the sheet the frosted frame exists to avoid. So
+ * the card becomes a translucent well while the preview keeps its own opaque backdrop: a 3D model still
+ * gets a calm surface to be judged against, and the panel still reads as glass around it.
+ */
+.x-companion-panel .picker-card {
+  background: var(--x-panel-well);
+}
+
+.x-companion-panel .picker-upload-label {
+  background: var(--x-panel-field);
+}
+
+/* The attribution is a sibling of the cards in a flex row, so it needs its own line rather than a
+   fourth column competing with them. */
+.x-companion-panel .picker-attribution {
+  flex-basis: 100%;
+  text-align: left;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* `.x-pick` carries `x-ambient`, whose wash is meant for a full page. Inside a panel the panel itself is
+   already the surface, so the second wash only muddies the glass. */
+.x-companion-panel .x-pick.x-ambient {
+  background: none;
 }
 
 /* Below ~700px the three picker cards cannot sit side by side without each becoming a sliver, so they

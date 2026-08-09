@@ -430,3 +430,53 @@ export const RING_LABELS: Record<RingId, string> = {
   mechanism: 'Mechanism',
   systems: 'Organ Systems',
 };
+
+/**
+ * Display names for the evidence sources in `learner/model.ts`.
+ *
+ * Here rather than in the panel that happens to need it first, for the same reason the subject copy is
+ * here: Settings lists these as toggles and the Simulation catalog names the one it will write back to,
+ * and if each wrote its own list the same source would be "UWorld" in one place and "uworld" in the
+ * other. `EvidenceSource` is not imported — that would make this content module depend on the model —
+ * so the key type is `string` and `sourceLabel` falls back to the raw id, which is also what makes a
+ * newly added source visible rather than silently blank.
+ */
+const SOURCE_LABELS: Record<string, string> = {
+  'anki': 'Anki',
+  'uworld': 'UWorld',
+  'amboss': 'AMBOSS',
+  'school-exam': 'School exam',
+  'nbme': 'NBME',
+  'self-report': 'Your own read on it',
+  // The in-product sources. "X" is the product, so these are the ones we generate ourselves.
+  'x-tutor': 'Tutor session',
+  'x-case': 'Case station',
+  'x-examiner': 'Examiner',
+  'x-concept-check': 'Concept check',
+  'x-exam-sim': 'Exam simulation',
+};
+
+/** One line on what a source is worth as evidence, and why. Shown next to its reliability. */
+const SOURCE_NOTES: Record<string, string> = {
+  'nbme': 'Proctored and calibrated. The strongest signal you can give the model.',
+  'school-exam': 'Sat under exam conditions, so recall and timing are both real.',
+  'uworld': 'Question-bank items written to test transfer, not recognition.',
+  'x-exam-sim': 'A full timed paper, scored the way the real one is.',
+  'amboss': 'Question-bank items, close in kind to UWorld.',
+  'x-case': 'A worked case, so it reports reasoning rather than recall.',
+  'x-examiner': 'Spoken answers, marked on what you actually said.',
+  'x-concept-check': 'Short retrieval checks between sessions.',
+  'anki': 'High volume, low signal per card — it shows recognition, not transfer.',
+  'x-tutor': 'Conversation with hints available, so correctness is only weak proof.',
+  'self-report': 'Useful context, and the weakest evidence there is.',
+};
+
+/** Display name for an evidence source id. Falls back to the id so nothing renders blank. */
+export function sourceLabel(source: string): string {
+  return SOURCE_LABELS[source] ?? source;
+}
+
+/** What that source is worth, in one line. Empty string if we have nothing honest to say. */
+export function sourceNote(source: string): string {
+  return SOURCE_NOTES[source] ?? '';
+}

@@ -146,6 +146,45 @@
   --x-critical: #B13A38;   /* 5.41:1 — destructive CONFIRMATION only */
   --x-fog:      #B6B4AF;   /* uncertainty, not failure */
 
+  /* Oxblood: the QUIET destructive. --x-critical is the loud one — it is reserved for a
+     confirmation the user must stop and read ("delete this deck?"). But a close button is not a
+     confirmation; it is a reversible, everyday affordance that should acknowledge destructive
+     intent at the moment of intent without alarming anyone. Two different jobs, so two values.
+
+     Derived, not invented: this is exactly `color-mix(in oklab, var(--x-critical) 78%, var(--x-ink))`
+     — Critical walked 22% toward the ink we already use for text. Measured OKLCH L.463 C.120 h23.6,
+     which sits it directly between --x-critical (L.521 C.155 h25.1) and --x-ink (L.254), on the same
+     hue. Held BELOW Critical in lightness and chroma on purpose: oxblood is blood that has dried, so
+     it must read as sober and deep rather than as an alert. Kept a literal hex like every other base
+     colour here (only derived washes/edges use color-mix at the token level), so the measured
+     contrast below is guaranteed rather than recomputed at every call site.
+
+     Provenance, stated because it differs: DESIGN-SYSTEM.md §2 lists `--x-oxblood` as #8C2F39, and
+     that intent ("destructive only. Never a learning state.") is honoured exactly. The hex is not,
+     because that table is a SUPERSEDED palette generation — the same table lists --x-hema as #2E3167
+     (live value #5D4DBE) and defines --x-iodine/--x-eosin, which this file replaced with --x-presence.
+     Copying #8C2F39 forward would import an orphan hue: it measures h17.6, while the live warm-dark
+     family sits at h23.6–25.1, so on THIS canvas it reads faintly pink-magenta next to --x-critical.
+     The two values are otherwise near-identical (L.445/C.126 vs L.463/C.120), so nothing is lost by
+     deriving from the shipped ramp instead — and the result cannot drift from Critical later.
+
+     Ratios, computed not guessed (and confirmed against the browser's own computed values):
+       as the icon stroke on its own 12% hover wash (#F2E4E2) ... 6.05:1  (clears AA text and the
+                                                                  3:1 non-text minimum outright)
+       as a glyph on --x-surface ............................... 7.30:1
+       the 12% wash against --x-surface ....................... 1.208:1  (a felt tint, not a highlight)
+       the 34% border against the wash it sits on ............. 1.82:1  (reads as an edge, not a ring)
+     For scale: the control's resting glyph is --x-ink-3 at 2.79:1, so hovering roughly doubles
+     contrast — the button gets more legible as it becomes dangerous, which is the whole point.
+
+     THE BUG THIS FIXES (measured in the running app, not assumed): with --x-oxblood undefined, all
+     three declarations in `.x-surface__ctl--close:hover` were invalid at computed-value time. IACVT
+     resolves to `unset`, so they did NOT simply "do nothing" — the invalid `background` still won the
+     cascade over the working `background: var(--x-surface-2)` inherited from `.x-surface__ctl:hover`,
+     leaving the close button as the only control in the app with NO hover fill, wearing an
+     ink-coloured border (border-color's initial value is currentColor) around transparency. */
+  --x-oxblood:  #903837;
+
   /* Behind-glass gradient depth. These exist to be BLURRED BEHIND a frosted surface, never used
      as a flat fill — frosted glass over a flat background is just a translucent grey rectangle. */
   --x-deep:  #3A3170;

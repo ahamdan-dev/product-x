@@ -58,27 +58,47 @@ export default function ImaginePanel({ id }: ImaginePanelProps) {
 
   const from = fromId ? subject(fromId) : undefined;
 
+  /**
+   * Display names live in the store, not in `subjects.ts` — which deliberately has no `label`, so that
+   * one list of display names cannot drift from another. So the *name* comes from the district and the
+   * *sentence* comes from the subject copy: "Cell & Molecular" is what the learner recognises,
+   * "Organelles, membrane transport…" is the reminder underneath it.
+   */
+  const fromLabel = useMemo(
+    () => (fromId ? districts.find(d => d.id === fromId)?.label : undefined),
+    [fromId, districts],
+  );
+
+  /**
+   * Resolve a pivot's district name for the chips.
+   *
+   * `getPivotOptions` returns the subject *summary* as its label, because it is pure and cannot reach
+   * the store. A full sentence is not a chip — it forced every pivot to render as a full-width stacked
+   * card. Passing this resolver down lets the chip show a name and keep the sentence as its tooltip.
+   */
+  const labelOf = useMemo(() => {
+    const byId = new Map(districts.map(d => [d.id, d.label]));
+    return (districtId: string) => byId.get(districtId);
+  }, [districts]);
+
   return (
     <Surface id={id} title="Imagine" eyebrow="Lateral pivots" glass>
       <div className="x-imagine-panel">
         {fromId && from ? (
           <>
+            {/* No trailing punctuation added after `summary` — it is already a full sentence, and
+                appending a period produced a visible ".." in the first capture. */}
             <p className="x-imagine-panel__from">
-              {derived ? (
-                <>
-                  Pivoting from <strong>{from.summary}</strong>. Focus a district on the Map to pivot
-                  from what you are actually studying.
-                </>
-              ) : (
-                <>
-                  Pivoting from <strong>{from.summary}</strong> — the district you have focused on the
-                  Map.
-                </>
-              )}
+              Pivoting from <strong>{fromLabel ?? from.summary}</strong>
+              {derived
+                ? ' — the first subject that offers pivots. Focus a district on the Map to pivot from what you are actually studying.'
+                : ' — the district you have focused on the Map.'}{' '}
+              <span className="x-imagine-panel__summary">{from.summary}</span>
             </p>
 
             <Imagine
               currentSubjectId={fromId}
+              labelOf={labelOf}
               onPin={cardId =>
                 setPinned(prev =>
                   prev.includes(cardId) ? prev.filter(c => c !== cardId) : [...prev, cardId],

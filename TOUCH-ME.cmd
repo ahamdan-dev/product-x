@@ -177,29 +177,54 @@ if defined LOCK_NOW (
   )
 )
 
+rem  `npm ci` is used ONLY on a genuinely empty tree, and that restriction is the important part.
+rem
+rem  `npm ci` DELETES node_modules before it installs. When it then fails part-way - and on Windows
+rem  it fails easily, because a running Electron holds a lock on node_modules\electron\dist\icudtl.dat
+rem  and npm cannot unlink it - the tree is left gutted. Measured here: `react` was gone and the app
+rem  would not start, from a launcher run whose only job was to CHECK. A launcher that can brick the
+rem  project directory is worse than one that is slightly out of date, so an existing install is
+rem  topped up with `npm install`, which is additive and never empties the directory first.
 if "!NEED_INSTALL!"=="1" (
   echo.
   echo   Installing dependencies...
   pushd "%APP_DIR%"
-  set "DEP_RC=0"
-  if exist package-lock.json (
-    call npm ci --no-audit --no-fund
-    rem Capture the code immediately: the next command overwrites errorlevel, and `popd`
-    rem succeeding is what silently turned a failed install into "Dependencies ready".
-    if errorlevel 1 (
-      echo   [warn]    npm ci failed - retrying with npm install.
-      call npm install --no-audit --no-fund
-      if errorlevel 1 set "DEP_RC=1"
-    )
-  ) else (
+  if exist node_modules (
     call npm install --no-audit --no-fund
-    if errorlevel 1 set "DEP_RC=1"
+  ) else (
+    if exist package-lock.json (
+      call npm ci --no-audit --no-fund
+    ) else (
+      call npm install --no-audit --no-fund
+    )
   )
   popd
-  if "!DEP_RC!"=="1" goto :dep_fail
+
+  rem  VERIFY, rather than trust the exit code.
+  rem
+  rem  npm ships as a .cmd shim, and its exit status does not reliably survive `call` inside a
+  rem  parenthesised block: measured here, `npm ci` died with EBUSY and `if errorlevel 1` was still
+  rem  false, so the launcher cheerfully printed "Dependencies ready" over a broken tree. The only
+  rem  trustworthy answer to "did the install work" is to ask Node whether the app's real entry
+  rem  dependencies actually resolve now.
+  call :verify_deps
+  if errorlevel 1 goto :dep_fail
   echo   [ok]      Dependencies ready.
 ) else (
-  echo   [ok]      Dependencies already installed.
+  rem  Even the fast path is verified: node_modules can exist and still be unusable, which is exactly
+  rem  the state a half-finished `npm ci` leaves behind.
+  call :verify_deps
+  if errorlevel 1 (
+    echo   [warn]    node_modules is present but incomplete - repairing.
+    pushd "%APP_DIR%"
+    call npm install --no-audit --no-fund
+    popd
+    call :verify_deps
+    if errorlevel 1 goto :dep_fail
+    echo   [ok]      Dependencies repaired.
+  ) else (
+    echo   [ok]      Dependencies already installed.
+  )
 )
 
 rem -- Record a successful pass. This is what stops the install path re-running. --
@@ -218,16 +243,35 @@ if "%CHECK_ONLY%"=="1" (
   exit /b 0
 )
 
+rem ===========================================================================
+rem  Build the desktop shell, then start it.
+rem
+rem  This used to run `npm run dev`, which starts a Vite WEB SERVER and prints a
+rem  localhost URL. Product X is an always-on-top desktop overlay: two frameless
+rem  transparent windows that float over the student's real work. A dev server
+rem  opens no window at all, so double-clicking this file never started the
+rem  actual product - it parked a terminal on a port and waited.
+rem
+rem  `electron:start` builds the renderer AND the main/preload pair into
+rem  dist-electron, then launches Electron against them. The build is
+rem  incremental and takes a few seconds; it runs every launch on purpose,
+rem  because after an auto-update the compiled shell would otherwise be stale
+rem  while the source was new - and a mismatch there is far more confusing to
+rem  debug than a short wait.
+rem ===========================================================================
 echo.
 echo   ---------------------------------------------------------------
 echo   Starting Product X...
+echo   The companion appears in the bottom-right of your screen.
 echo   Close this window to stop the app.
 echo   ---------------------------------------------------------------
 echo.
 
 pushd "%APP_DIR%"
-call npm run dev
+call npm run electron:start
+set "RUN_RC=%ERRORLEVEL%"
 popd
+if not "%RUN_RC%"=="0" goto :run_fail
 goto :done
 
 rem ===========================================================================
@@ -258,6 +302,39 @@ if /i "%~1"=="OpenJS.NodeJS.LTS" (
   if not errorlevel 1 exit /b 0
 )
 exit /b 1
+
+:verify_deps
+rem  Is the dependency tree actually usable? Two things make this worth a real check rather than a
+rem  test for the existence of node_modules:
+rem
+rem    1. node_modules existing proves nothing. A half-finished `npm ci` leaves a directory full of
+rem       packages with the important ones missing - measured here: 129 entries present, `react`
+rem       gone, app dead.
+rem    2. npm's exit code does not survive its .cmd shim inside a parenthesised block, so
+rem       `if errorlevel 1` after `call npm ci` read as success while npm had died with EBUSY.
+rem
+rem  It checks each package's own directory and manifest on disk. Two earlier attempts were wrong, and
+rem  both failed the same way - reporting a broken tree while npm said "up to date in 1s" - so they are
+rem  recorded here to stop them being reintroduced:
+rem
+rem    * `require.resolve(m + '/package.json')` is not a liveness probe. Modern packages restrict their
+rem      `exports` map, so `three/package.json` is deliberately unreachable and a HEALTHY install throws
+rem      ERR_PACKAGE_PATH_NOT_EXPORTED.
+rem    * `.filter(m => !fs.existsSync(...))` cannot be written inline here. This file runs under
+rem      `setlocal EnableDelayedExpansion` (needed by the version comparisons above), and delayed
+rem      expansion STRIPS the `!` out of the string before node ever sees it - measured: `a!b` arrives
+rem      as `ab`. The negation vanished, so every PRESENT package was reported missing.
+rem
+rem  Hence `=== false` instead of `!`, and DisableDelayedExpansion in this scope as a second guard so a
+rem  future edit that adds a `!` here fails loudly rather than silently inverting its own logic.
+rem  stderr is deliberately NOT swallowed: when this does fail, the list of missing packages is the
+rem  entire diagnosis.
+setlocal DisableDelayedExpansion
+pushd "%APP_DIR%"
+node -e "const fs=require('fs'),p=require('path');const need=['react','react-dom','three','vite','electron','@react-three/fiber','@react-three/drei','zustand'];const miss=need.filter(function(m){return fs.existsSync(p.join('node_modules',m,'package.json'))===false;});if(miss.length>0){console.error('   [!]       missing from node_modules: '+miss.join(', '));process.exit(1);}"
+set "VD_RC=%ERRORLEVEL%"
+popd
+endlocal & exit /b %VD_RC%
 
 :refresh_path
 rem A fresh install writes PATH to the registry, but this already-running shell holds a
@@ -290,6 +367,14 @@ goto :fail
 :dep_fail
 echo.
 echo   Dependency install failed. Scroll up for the npm error.
+goto :fail
+
+:run_fail
+rem  A non-zero exit from the app is reported rather than swallowed. Closing the companion
+rem  window is a clean exit (0), so anything else here is a genuine startup failure and the
+rem  npm/electron output above it is the diagnosis.
+echo.
+echo   Product X could not start. The error is in the output above.
 goto :fail
 
 :fail

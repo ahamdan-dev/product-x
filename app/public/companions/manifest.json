@@ -1,6 +1,6 @@
 {
-  "generatedBy": "tools/rig_to_glb.py",
-  "blender": "4.5.10 LTS",
+  "generated": "tools/fbx_to_glb.cjs (three.js FBXLoader -> GLTFExporter, run in Electron)",
+  "targetHeight": 1.75,
   "license": {
     "pack": "Free Animation Pack - City People Commons",
     "author": "Denys Almaral",
@@ -9,225 +9,170 @@
     "source": "https://denysalmaral.com/2019/07/free-animation-pack-city-people-common-moves-wip.html",
     "notice": "Character animations by Denys Almaral, licensed CC BY 4.0."
   },
-  "targetHeight": 1.75,
   "companions": [
     {
       "id": "companion-a",
       "label": "Ash",
       "rig": "male",
       "file": "companions/companion-a.glb",
-      "bytes": 723188,
-      "bones": 22,
-      "fps": 30,
-      "metrics": {
-        "canonicalPose": "idle1@1",
-        "canonicalBasis": [
-          0.009528,
-          0.999955,
-          0.0,
-          -0.40352,
-          -0.999955,
-          0.009528,
-          0.0,
-          1.96834,
-          0.0,
-          0.0,
-          1.0,
-          92.405388,
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "targetHeight": 1.75,
-        "measuredHeight": 1.75,
-        "groundLine": 0.0,
-        "pivotX": 0.0,
-        "pivotY": 0.0,
-        "idleGroundDrift": [
-          -0.05057,
-          0.0019
-        ],
-        "normalisedOn": "companion_root",
-        "holderScale": 0.96692842
-      },
+      "bones": 29,
+      "vertices": 4656,
       "clips": [
         {
-          "name": "celebrate",
-          "frames": 49,
-          "frameStart": 1,
-          "frameEnd": 49
-        },
-        {
-          "name": "dance",
-          "frames": 57,
-          "frameStart": 1,
-          "frameEnd": 57
-        },
-        {
-          "name": "flourish",
-          "frames": 61,
-          "frameStart": 1,
-          "frameEnd": 61
-        },
-        {
-          "name": "hype",
-          "frames": 101,
-          "frameStart": 1,
-          "frameEnd": 101
-        },
-        {
           "name": "idle1",
-          "frames": 201,
-          "frameStart": 1,
-          "frameEnd": 201
+          "duration": 6.6667,
+          "tracks": 87
         },
         {
           "name": "idle2",
-          "frames": 221,
-          "frameStart": 1,
-          "frameEnd": 221
-        },
-        {
-          "name": "jog",
-          "frames": 31,
-          "frameStart": 1,
-          "frameEnd": 31
-        },
-        {
-          "name": "run",
-          "frames": 21,
-          "frameStart": 1,
-          "frameEnd": 21
-        },
-        {
-          "name": "talk",
-          "frames": 181,
-          "frameStart": 1,
-          "frameEnd": 181
+          "duration": 7.3333,
+          "tracks": 87
         },
         {
           "name": "walk",
-          "frames": 31,
-          "frameStart": 1,
-          "frameEnd": 31
-        },
-        {
-          "name": "walk_busy",
-          "frames": 41,
-          "frameStart": 1,
-          "frameEnd": 41
+          "duration": 1,
+          "tracks": 87
         },
         {
           "name": "walk_slow",
-          "frames": 41,
-          "frameStart": 1,
-          "frameEnd": 41
+          "duration": 1.3333,
+          "tracks": 87
+        },
+        {
+          "name": "jog",
+          "duration": 1,
+          "tracks": 87
+        },
+        {
+          "name": "run",
+          "duration": 0.6667,
+          "tracks": 87
+        },
+        {
+          "name": "talk",
+          "duration": 6,
+          "tracks": 87
+        },
+        {
+          "name": "walk_busy",
+          "duration": 1.3333,
+          "tracks": 87
+        },
+        {
+          "name": "celebrate",
+          "duration": 1.6,
+          "tracks": 87
+        },
+        {
+          "name": "flourish",
+          "duration": 2,
+          "tracks": 87
+        },
+        {
+          "name": "hype",
+          "duration": 3.3333,
+          "tracks": 87
+        },
+        {
+          "name": "dance",
+          "duration": 1.8667,
+          "tracks": 87
         }
-      ]
+      ],
+      "groundDrift": [
+        0.00236,
+        0.00237
+      ],
+      "deformationPctOfHeight": {
+        "idle1": 0.668,
+        "idle2": 4.01,
+        "walk": 3.47,
+        "walk_slow": 2.941,
+        "jog": 4.316,
+        "run": 5.23,
+        "talk": 5.288,
+        "walk_busy": 2.86,
+        "celebrate": 5.603,
+        "flourish": 4.796,
+        "hype": 7.101,
+        "dance": 6.508
+      }
     },
     {
       "id": "companion-b",
       "label": "Wren",
       "rig": "female",
       "file": "companions/companion-b.glb",
-      "bytes": 590464,
-      "bones": 22,
-      "fps": 30,
-      "metrics": {
-        "canonicalPose": "idle1@1",
-        "canonicalBasis": [
-          1e-06,
-          1.0,
-          0.0,
-          1.301927,
-          -1.0,
-          1e-06,
-          0.0,
-          4.708696,
-          0.0,
-          0.0,
-          1.0,
-          93.859375,
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "targetHeight": 1.75,
-        "measuredHeight": 1.75,
-        "groundLine": 0.0,
-        "pivotX": -0.0,
-        "pivotY": 0.0,
-        "idleGroundDrift": [
-          -0.00697,
-          0.02048
-        ],
-        "normalisedOn": "companion_root",
-        "holderScale": 1.47714269
-      },
+      "bones": 29,
+      "vertices": 4866,
       "clips": [
         {
-          "name": "celebrate",
-          "frames": 49,
-          "frameStart": 1,
-          "frameEnd": 49
-        },
-        {
-          "name": "dance",
-          "frames": 57,
-          "frameStart": 1,
-          "frameEnd": 57
-        },
-        {
-          "name": "hype",
-          "frames": 101,
-          "frameStart": 1,
-          "frameEnd": 101
-        },
-        {
           "name": "idle1",
-          "frames": 151,
-          "frameStart": 1,
-          "frameEnd": 151
+          "duration": 5,
+          "tracks": 87
         },
         {
           "name": "idle2",
-          "frames": 191,
-          "frameStart": 1,
-          "frameEnd": 191
-        },
-        {
-          "name": "jog",
-          "frames": 31,
-          "frameStart": 1,
-          "frameEnd": 31
-        },
-        {
-          "name": "run",
-          "frames": 21,
-          "frameStart": 1,
-          "frameEnd": 21
+          "duration": 6.3333,
+          "tracks": 87
         },
         {
           "name": "walk",
-          "frames": 31,
-          "frameStart": 1,
-          "frameEnd": 31
-        },
-        {
-          "name": "walk_busy",
-          "frames": 41,
-          "frameStart": 1,
-          "frameEnd": 41
+          "duration": 1,
+          "tracks": 87
         },
         {
           "name": "walk_slow",
-          "frames": 41,
-          "frameStart": 1,
-          "frameEnd": 41
+          "duration": 1.3333,
+          "tracks": 87
+        },
+        {
+          "name": "jog",
+          "duration": 1,
+          "tracks": 87
+        },
+        {
+          "name": "run",
+          "duration": 0.6667,
+          "tracks": 87
+        },
+        {
+          "name": "walk_busy",
+          "duration": 1.3333,
+          "tracks": 87
+        },
+        {
+          "name": "celebrate",
+          "duration": 1.6,
+          "tracks": 87
+        },
+        {
+          "name": "hype",
+          "duration": 3.3333,
+          "tracks": 87
+        },
+        {
+          "name": "dance",
+          "duration": 1.8667,
+          "tracks": 87
         }
-      ]
+      ],
+      "groundDrift": [
+        0.00333,
+        0.00335
+      ],
+      "deformationPctOfHeight": {
+        "idle1": 0.976,
+        "idle2": 3.223,
+        "walk": 3.258,
+        "walk_slow": 2.421,
+        "jog": 3.325,
+        "run": 6.33,
+        "walk_busy": 2.421,
+        "celebrate": 4.011,
+        "hype": 6.441,
+        "dance": 5.447
+      }
     }
   ]
 }

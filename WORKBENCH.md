@@ -11,7 +11,7 @@ source-of-truth ledger and mirrors the live Workbench web document.
 
 # LIVE WORKBENCH
 
-**Live URL:** https://workbench.md/d/F0N2aMsE0N?key=4uTXfmxxLb3HXUR0KT3Pn
+**Live URL:** removed from source control; use local Workbench configuration.
 **Access mode:** edit (anonymous doc — this key is the full capability)
 **Last synced:** 2026-08-09
 **Director:** Claude Code (Opus 5)
@@ -164,10 +164,18 @@ on screen rather than described in prose.
     failure. Fixed with `curl --ssl-no-revoke`; the chain still validates.
 
 - [x] **Both companion characters converted to engine-ready 3D**
-  - Result: `companion_male.glb` (700 KB, 11 animations) and `companion_female.glb` (591 KB, 10),
-    22 joints each, embedded texture, ~1.6k tris. Replaces the "alvin" chipmunk placeholder.
-  - Evidence: GLB binary headers parsed directly in Node — animation names, skin, joint count, and
-    texture confirmed from the file, not from the exporter's log.
+  - Result: the shipping files are `companion-a.glb` (2.4 MB, 12 animations) and `companion-b.glb`
+    (1.8 MB, 10), **29 joints** each, embedded texture, 1552 / 1622 tris. Replaces the "alvin"
+    chipmunk placeholder — and also supersedes the earlier `companion_male/_female.glb` pair
+    (700/591 KB, 11 and 10 clips, 22 joints), which is what the previous entry described and which
+    the app no longer loads.
+  - Evidence: a real GPU render pass in Electron, every triangle edge measured against its own bind
+    length across every clip, plus the same measurement re-run on the source FBX and visual captures
+    of the worst frame — `_shots/gpu-companion-a.log`, `gpu-companion-b.log`, `hip-tear.log`,
+    `hip-glb-idle1-*.png`. **Corrected:** this line previously read "GLB binary headers parsed
+    directly in Node". Parsing the container can confirm clips, joints and a texture *exist*; it
+    never poses a vertex or renders a pixel, so it could not justify a claim about the rig
+    deforming correctly. The stated method did not support the stated conclusion.
   - Obstacle overcome: `blender_mcp` had no `__main__` and would not run as a module. Rather than
     debug a socket addon, routed to Blender's headless CLI, which was already verified working and
     is strictly better for batch conversion — no GUI, no addon, scriptable.
@@ -229,13 +237,17 @@ on screen rather than described in prose.
 | Work confined to project-x | Path check on every write | Zero outside writes | pass | all files under `Desktop\project-x` |
 | GitHub delivery real | `gh auth status`, `gh repo view` | Authenticated, repo exists | pass | `ahamdan-dev`, scopes `gist, read:org, repo` |
 | Live Workbench | Create then re-read over HTTP | Serves seeded content | pass | `201 {"kind":"live"}`, `GET` returns fences |
-| Characters engine-ready | Parse GLB binary in Node | Animations + skin + texture present | pass | 11 and 10 named clips, 22 joints, embedded PNG |
+| Characters engine-ready | Real GPU render pass in Electron (`app/gpu_check.cjs`): every triangle edge measured posed-against-its-own-bind-length across every clip, judged on growth as a fraction of body height; the same per-edge measurement re-run against the source FBX; plus flat-white and textured captures of the worst frame | Skins correctly on the GPU; no edge grows a visible fraction of body height in any clip; GLB no worse than the FBX it was converted from; silhouette intact in the capture | pass | `_shots/gpu-companion-a.log` 12/12 clips CLEAN, worst edge growth 7.10% of height (gate 25%), all 4656 edges — the `1500` in `STEP` resolves to 1 on a 1552-tri mesh, so there is **no** stride; `gpu-companion-b.log` 10/10 CLEAN, worst 6.81%, all 4866 edges. `_shots/hip-tear.log`: 49 frames of `idle1`, every edge, GLB 0.68% vs source FBX 0.68%, ratio 1.000x. Captures `hip-glb-idle1-pelvis.png`, `-full.png`, `-pelvis-textured.png` — silhouette and texture both whole. **Limit of this evidence:** the GPU pass samples 7 time points per clip; only `idle1` on companion-a is covered at 49 frames. **Counts corrected:** the shipping files are `companion-a/-b.glb` with **12 and 10 clips, 29 joints**; the old "11 and 10 clips, 22 joints" describes the superseded `assets/companion/companion_male/_female.glb`, which the app no longer loads. |
+| App's tear gate actually runs | Reproduce `prepareRig` + `worstEdge` verbatim on the shipping GLBs through the app's own code path (`tools/picker_gate.cjs`), then measure every clip, not just the idle the picker probes | A non-zero edge is measured on non-indexed geometry, and no clip exceeds `0.18 × height` | pass | `_shots/picker-gate.log`: threshold **0.3150 m**; worst edge at rest 0.1480 m (a) / 0.1243 m (b); worst posed edge across ALL clips 0.1613 m (a, `hype`) / 0.1951 m (b, `hype`) — 51.2% and 62.0% of threshold; `animatable TRUE` on both. Before the fix this read exactly **0.0000 m** on every edge of every clip: `worstEdge` returned early on `if (!pos \|\| !index)` and both GLBs are non-indexed (`_shots/glb-shape-probe.log`, `INDEX BUFFER: ABSENT`), so `assessRigIntegrity` was handed `maxEdge = 0` and passed unconditionally. An exact zero was a code path that never ran, not a small number. **Known coarseness:** the gate samples every 15th corner, so it understates — the unstrided probe measures companion-a's worst rest edge at 0.1649 m against the gate's 0.1480 m. Still 2x inside the threshold either way. |
+| Companions stand upright, correctly scaled | `needsZUpToYUp` unit tests + skinned bind box measured four ways on the shipping files | Y-up converter output is not rotated; height reads as height | pass | `_shots/glb-shape-probe.log`: bind box `0.531 × 1.750 × 0.380` upright, and the old unconditional +90° about X turned that into `0.531 × 0.380 × 1.750`, after which `normaliseUpright` read the 0.38 m depth as height and scaled 4.6x to compensate. Now conditional on `needsZUpToYUp`, which is unit-tested against the standing case, the lying case, and a T-pose whose arm span exceeds its height (`glbSource.test.ts`). |
+| Picker renders both companions unobscured | Screenshot the live picker panel at its real window size after the mask fix | Both figures at full colour, whole, animating, no cut | pass | `_shots/picker-mask-fixed.png` (1899×1034) — both companions render at full colour and intact. Before: `_shots/picker-front.png` shows two diagonal cuts meeting near the male's hips with the left thigh apparently detached. Cause was `rectsToClipPath` emitting ONE `polygon()` for two rectangles; CSS `polygon()` is a single ring, so it drew connecting diagonals between the two wells and `evenodd` punched out the crossing wedge. Now `path()` with one closed subpath per rectangle. This read on screen as a torn rig and cost a full forensic pass on the asset — the geometry was never wrong, the mask was. |
+| Conversion faithful to the source FBX | Load source FBX and converted GLB side by side in one three.js, play the same clip, compare per-edge growth distributions normalised by each figure's own height (`tools/fbx_vs_glb.cjs`) | GLB max growth within 25% of the FBX's | partial | `_shots/fbx-vs-glb.log`: the two **same-rig** `idle1` pairs are identical to three decimals (a 0.668% vs 0.668%; b 0.976% vs 0.976%) — faithful. The two `hype` pairs read "GLB IS WORSE" (a 7.101% vs 3.908%; b 6.441% vs 3.908%) and the log's overall verdict is therefore **FAILURE**, not success. Mitigating, and measured: `hype` is a CROSS-RIG retarget, so it is being compared against a base rig it was never authored on (`_shots/clip-audit.log`: 20 cross-rig clips, 6 regressed). **Missing:** no same-rig source exists for `hype`, so cross-rig conversion fidelity is unproven either way. Absolute growth stays under the 25% GPU gate and the 0.3150 m app gate regardless. |
 | Companion timing feels alive | Deterministic clock/RNG unit tests | Latency, interrupts, cooldowns, focus all hold | pass | 24/24 `arbiter.test.ts` |
 | Camera is controlled | Unit tests under abusive input | Cannot escape clamps; lean always springs back | pass | 20/20 `camera.test.ts` |
 | Real fonts, not fallbacks | Download + inspect file headers | Genuine variable fonts on disk | pass | 3 TTFs, axes read from files |
 | Palette is not generated-default | Design-skill calibration check | Not any of the 3 known clusters | pass | first pass rejected in writing, rebuilt |
 | App runs | `vite build`, then load in Electron and capture | Window opens, all three surfaces render | pass | `vite build` EXIT 0 in 4.1s; `_shots/today-v1.png`, `map-v1.png`, `together-v1.png` |
-| Whole suite green | `npx vitest run` | All files pass, no skips | pass | 596/596 across 21 files |
+| Whole suite green | `npx vitest run` | All files pass, no skips | pass | 665/665 across 22 files, re-run 2026-08-09 (was recorded as 596/21 — stale, the suite has grown) |
 | Code splitting real | Inspect build output chunk list | `three` isolated, not in entry | pass | `three-*.js` 683 kB in its own lazy chunk; `TodaySurface` 27 kB |
 | Overlay does not obscure the user's SCREEN | Capture over a synthetic desktop pattern (`X_BEHIND=desktop`) | Pattern readable between surfaces | pass | `_shots/trans-map2.png`, `trans-today.png`, `trans-comp2.png`, `pt-today2.png` |
 | Overlay does not obscure the user's FUNCTION | Sample a 48×24 grid, ask the shipped `ownsPoint` who owns each point (`X_PROBE=passthrough`) | Strictly between 0% and 100%: clicks reach the app on surfaces and the desktop elsewhere | pass | Today 57.2%, Together 34.5%, Map 85.8% — maps in `_shots/*.passthrough.txt`. Map is high *by design* (drag-anywhere camera orbit), so that window is not a passthrough surface; Today/Together are. |
@@ -261,8 +273,9 @@ Only `pass` when actually inspected. Nothing above is asserted without the named
 cd C:\Users\jhamdan\Desktop\project-x\app
 npx vitest run
 ```
-Expect **596 passing across 21 files** — including 24 companion-timing, 20 camera-contract, 25 board
-(4 of them label orientation), and 18 click-through.
+Expect **665 passing across 22 files** — including 24 companion-timing, 20 camera-contract, 25 board
+(4 of them label orientation), 18 click-through, and 63 in `glbSource.test.ts` covering the rig gate,
+`needsZUpToYUp`, and `rectsToClipPath`. (Re-run 2026-08-09; the figure was 596/21 and had gone stale.)
 
 **See it as an overlay — the two harnesses that make the claims falsifiable:**
 ```
@@ -290,6 +303,12 @@ click looks identical to one that passes them through.
 - P2: frame timing has never been measured. The DPR cap and instancing are design choices, not
   benchmarks, and the matrix says so.
 - P2: companion cross-fade blending is unit-tested but has not been watched on screen.
+- P2: cross-rig retargeted clips are not proven faithful. `_shots/fbx-vs-glb.log` reports `hype`
+  deforming worse in our GLB than in the FBX it was compared against, and that log's overall verdict
+  is a FAILURE, not a pass. The comparison is against a base rig `hype` was never authored on, and no
+  same-rig source for it exists, so this is genuinely open rather than dismissed. Same-rig `idle1`
+  matches its source to three decimals on both companions, and absolute growth stays inside both the
+  25% GPU gate and the 0.3150 m app gate — so it ships, with the gap recorded.
 
 Corrected here rather than quietly: this section previously read "nothing renders on screen yet" and
 "Electron always-on-top shell not yet wired." Both are now false — all three surfaces render, and both

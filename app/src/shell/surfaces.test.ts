@@ -7,6 +7,12 @@ import {
 import {
   PANELS, panelById, panelBySlug, panelSurfaceId, initialGeometry, type PanelId,
 } from './panels';
+import { getPivotOptions } from '../imagine/pivots';
+import { SUBJECTS } from '../content/subjects';
+import { useApp } from '../state/store';
+
+/** The real district list, read from the store's seeded state — the same source the panel reads. */
+const DISTRICTS = useApp.getState().districts;
 
 describe('the three-surface constraint', () => {
   it('is exactly three surfaces — Today, Map, Together', () => {
@@ -226,5 +232,48 @@ describe('keyboard cycling', () => {
     expect(cycleSurface('today', 3)).toBe('today');
     expect(cycleSurface('today', -4)).toBe('together');
     expect(cycleSurface('today', 4)).toBe('map');
+  });
+});
+
+/**
+ * The pivot chip labels.
+ *
+ * `getPivotOptions` is pure and cannot reach the store, so its `label` is the subject *summary* — a full
+ * sentence. That is correct for the module and wrong for a chip: rendered directly it forced every pivot
+ * to become a full-width stacked card, which is what the first capture showed. The panel therefore
+ * resolves district names itself and passes a resolver down. These assert the two halves of that contract.
+ */
+describe('pivot options are addressed by id, so a host can rename them', () => {
+  it('returns an id that is a real district, not just display text', () => {
+    // The resolver is keyed by `opt.id`, so if these ids were ever labels the chips would silently
+    // fall back to sentences for every pivot.
+    const ids = new Set(DISTRICTS.map(d => d.id));
+    for (const subj of SUBJECTS) {
+      for (const opt of getPivotOptions(subj.id)) {
+        expect(ids.has(opt.id), `${subj.id} pivots to unknown district ${opt.id}`).toBe(true);
+      }
+    }
+  });
+
+  it('every pivot id can be resolved to a short display name', () => {
+    // "Short" is the whole point: a chip must be a name, not a sentence. The longest real district
+    // label is "Cell & Molecular" at 16 characters, so 40 is a generous ceiling that still fails if
+    // someone starts feeding summaries back in.
+    for (const subj of SUBJECTS) {
+      for (const opt of getPivotOptions(subj.id)) {
+        const label = DISTRICTS.find(d => d.id === opt.id)?.label;
+        expect(label, opt.id).toBeTruthy();
+        expect(label!.length, `${opt.id} label too long for a chip`).toBeLessThan(40);
+        expect(label!.includes('.'), `${opt.id} label is a sentence, not a name`).toBe(false);
+      }
+    }
+  });
+
+  it('the summary it falls back to is a real sentence, so the fallback is still readable', () => {
+    // If no resolver is supplied the chip shows `opt.label`. That path must stay coherent.
+    for (const opt of getPivotOptions('cell')) {
+      expect(opt.label.length).toBeGreaterThan(0);
+      expect(opt.reason.length).toBeGreaterThan(0);
+    }
   });
 });

@@ -14,7 +14,40 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "electron:dev": "vite --mode electron",
-    "electron:build": "vite build && electron-builder"
+    "electron:start": "vite build --mode electron && electron .",
+    "electron:build": "vite build --mode electron && electron-builder"
+  },
+  "//build": [
+    "electron-builder config. `electron:build` invoked electron-builder with NO build key at all,",
+    "which fails immediately — so the packaging path had never once been exercised.",
+    "`files` is an allowlist rather than a denylist: the repo carries _refs/, _vendor/, _shots/ and",
+    "a large FBX animation pack, and a denylist would silently ship whichever of those someone adds",
+    "next. asarUnpack covers the GLBs because three's loaders fetch them by URL, and a packed asar",
+    "path is not fetchable."
+  ],
+  "build": {
+    "appId": "dev.ahamdan.productx",
+    "productName": "Product X",
+    "directories": { "output": "release" },
+    "files": [
+      "dist/**",
+      "dist-electron/**",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "dist/**/*.glb",
+      "dist/**/*.png"
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Product X"
+    }
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.35",
