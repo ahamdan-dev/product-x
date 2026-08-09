@@ -142,12 +142,27 @@ _none_
   - Preserved: original zip untouched in Downloads; `_contract/` originals are read-only by policy.
 
 - [x] Establish project boundaries and delivery target
-  - Result: workdir fixed to `C:\Users\jhamdan\Desktop\project-x`; git repository initialized;
-    GitHub delivery target identified.
-  - Evidence: `git init` succeeded; `gh auth status` → logged in as `ahamdan-dev` with `repo` scope;
-    `gh repo view ahamdan-dev/product-x` → exists, public, **empty**, created 2026-08-09.
-  - Note: no repo named `project-x` exists. `product-x` is empty and was created the same day, so it
-    is treated as the likely intended target. Flagged to the user for confirmation or rename.
+  - Result: workdir fixed to `C:\Users\jhamdan\Desktop\project-x`; git initialized on `main`;
+    delivery repo confirmed by the user as `ahamdan-dev/product-x` (kept under that name).
+  - Evidence: `gh auth status` → `ahamdan-dev`, scopes `gist, read:org, repo`.
+  - Note: no repo named `project-x` exists; the user chose to use `product-x` as-is.
+
+- [x] Push the contract scaffold to GitHub
+  - Result: `main` pushed and tracking `origin/main` at
+    https://github.com/ahamdan-dev/product-x
+  - Evidence: `git push -u origin main` → `* [new branch] main -> main`;
+    `gh repo view` → `isEmpty: false`, default branch `main`;
+    `gh api …/contents` lists all 7 entries (`.gitignore`, `AGENTS.md`, `ARSENAL.md`, `CLAUDE.md`,
+    `START-HERE-FABLE-BUILD-ME-THIS-CONTRACT.md`, `WORKBENCH.md`, `_contract`).
+  - Passed: remote state verified by querying GitHub, not inferred from push output alone.
+
+- [x] Create the live Workbench HQ
+  - Result: live human-facing coordination page with status, board, quality-matrix sheet, decisions,
+    and team chat — openable from any browser or phone.
+  - Evidence: `POST /new` → `201 {"kind":"live"}`; `GET /d/F0N2aMsE0N.md` returns the seeded fences.
+  - Obstacle overcome: HTTP 000 on every request looked like blocked egress. `npm ping` succeeding
+    disproved that; the real cause was a Windows schannel certificate-revocation failure. Fixed with
+    `curl --ssl-no-revoke` — chain still validates, only the revocation lookup is skipped.
 
 ---
 
@@ -210,7 +225,8 @@ Workbench unavailable.
 | 2026-08-09 | Canary `YO-YO` opens and closes every output | User audit signal for these ground rules | human |
 | 2026-08-09 | Live Workbench HQ created as an anonymous doc; local `WORKBENCH.md` mirrors it | Contract §11 mandates a live surface when the environment can reach Workbench. It can. | agent |
 | 2026-08-09 | HTTPS from the shell uses `curl --ssl-no-revoke` | Windows schannel cannot reach the CA revocation list; the certificate chain itself validates | agent |
-| 2026-08-09 | `ahamdan-dev/product-x` treated as the delivery repo | Only empty same-day repo; no `project-x` exists. Awaiting confirm/rename | agent |
+| 2026-08-09 | Delivery repo is `ahamdan-dev/product-x`, kept under that name (no rename) | User decision when asked; no `project-x` repo exists | human |
+| 2026-08-09 | Contract scaffold pushed immediately rather than held | User decision; gets the governing contract backed up off-machine from day one | human |
 | 2026-08-09 | `_contract/` originals are read-only; edits go to root copies | Keeps a verifiable baseline of the contract | agent |
 
 ---
