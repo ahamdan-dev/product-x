@@ -49,8 +49,26 @@ references, and the real artifact — never the builder's rationale.
 
 ## MCP servers
 
-- `tt-servicenow` (global) — Trading Technologies ServiceNow. Unrelated to Project X; will not be
-  used here unless the mission calls for it.
+Both registered at **user scope** (`~/.claude.json`), so available in every project.
+
+- `heroui-react` — `npx -y @heroui/react-mcp@latest`, package v1.1.0. Installed 2026-08-09 at the
+  user's request. Verified working: JSON-RPC handshake returned `serverInfo` and 6 tools;
+  `list_components` returned the live HeroUI **v3.0.5** catalog (70 components).
+  - Tools: `list_components`, `get_component_docs`, `get_component_source_code`,
+    `get_component_source_styles`, `get_docs`, `get_theme_variables`.
+  - **Scope limit that matters:** v3 **beta only**. It does not document HeroUI v2, and v2→v3
+    migration is unsupported. v3 requires **Tailwind CSS v4** (not v3), React 19+, uses compound
+    components (`Card.Header`), needs no Provider, and is built on React Aria Components.
+  - **When it beats the alternatives:** if the mission uses HeroUI v3, this is authoritative and
+    current — better than model recall, which predates v3 beta. `get_component_source_code` and
+    `get_theme_variables` give real source and tokens rather than plausible-looking guesses.
+  - **When it does not:** it is a docs server for one React library. It contributes nothing to
+    non-React work, 3D/WebGL/motion work, or design direction. A component library also imposes a
+    recognizable house style, which cuts against contract §7's zero-detectable-AI-artifacts bar
+    unless the theme is genuinely customized. Do not reach for it by default — only when the mission
+    is a React UI and HeroUI v3 is the right substrate.
+- `tt-servicenow` — Trading Technologies ServiceNow. Unrelated to Project X; will not be used here
+  unless the mission calls for it.
 
 ## Orchestration
 
