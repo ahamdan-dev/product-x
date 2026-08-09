@@ -11,21 +11,34 @@ source-of-truth ledger and the fallback when a live Workbench web document canno
 
 # LIVE WORKBENCH
 
-**Live URL:** NOT AVAILABLE — remote creation blocked from this harness (see note below)
-**Access mode:** n/a
-**Last synced:** 2026-08-09 (local ledger only)
+**Live URL:** https://workbench.md/d/F0N2aMsE0N?key=4uTXfmxxLb3HXUR0KT3Pn
+**Access mode:** edit (anonymous doc — this key is the full capability)
+**Last synced:** 2026-08-09
 **Director:** Claude Code (Opus 5) — lead/director for this project
-**State:** aligning
+**State:** aligning / awaiting-human (mission)
 
-## Harness capability note
+## Harness capability note — obstacle and fix
 
-- `https://workbench.md/agents.md` was fetched and read. Document creation requires `POST /new`
-  or `POST /api/docs` with a bearer token.
-- Outbound HTTP from the shell is blocked in this environment (`curl` → SSL connect error, HTTP 000).
-  Read-only page fetching works; POST does not.
-- **Result:** no remote live page exists. This local file is the ledger. No remote page is being
-  claimed. If the user supplies a `workbench.md/join/...` link or a `mgn_…` token, the live HQ can
-  be created and this section updated.
+- First attempt at remote creation failed: every `curl` to workbench.md returned HTTP 000. The
+  initial read of that was "shell egress is blocked."
+- That diagnosis was wrong. `npm ping` reached the registry fine, which contradicted it. The real
+  cause was a Windows **schannel certificate-revocation** failure —
+  `CRYPT_E_NO_REVOCATION_CHECK`: the OS could not reach the CA's revocation list, so it refused an
+  otherwise valid certificate.
+- **Fix:** `curl --ssl-no-revoke`. workbench.md then returned 200, and `POST /new` created the live
+  doc. Skipping the revocation *check* is not the same as accepting a bad certificate; the chain
+  still validates.
+- **Result:** the live HQ mandated by contract §11 exists and was verified by re-reading it over
+  HTTP. It is an anonymous doc, so it belongs to no account — see the ownership note below.
+
+## Ownership note (relay once, per Workbench's own guidance)
+
+The HQ page is unowned. Opening the link in a browser, signing in free, and clicking
+"Claim this doc" would attach it to the user's account and route "needs me" notifications to them.
+Nothing is gated on this — the page works either way. Claiming requires the user's own signed-in
+browser session; the agent will not sign up or claim on their behalf.
+
+Nothing sensitive is published to the page: no credentials, no tokens, no customer data.
 
 ---
 
@@ -146,7 +159,8 @@ _none_
 | Contract survives context loss | Persistent memory file + `MEMORY.md` index entry | Oath recallable in a fresh session | pass | `memory/project_x_fable_build_contract.md`, `MEMORY.md` |
 | Work confined to project-x | Path check on every write | Zero writes outside the workdir (memory dir excepted, by design) | pass | all project files under `Desktop\project-x` |
 | GitHub delivery path is real | `gh auth status`, `gh repo view` | Authenticated with push scope; target repo exists | pass | logged in as `ahamdan-dev`, scopes `gist, read:org, repo`; `product-x` empty |
-| Live Workbench page | Attempt remote creation | Live URL returned | fail (blocked) | shell egress blocked, HTTP 000; local ledger used instead |
+| Live Workbench page | Create the doc, then re-read it over HTTP | Live URL returned and serves the seeded content | pass | `POST /new` → 201 `{"kind":"live"}`; `GET /d/F0N2aMsE0N.md` returns the status/board/sheet/chat fences |
+| Capability inventory is real, not assumed | Run each tool; read the plugin registry | Version string returned per tool | pass | `ARSENAL.md` — Node 20.20.0, npm 10.8.2, git 2.55.0, gh 2.96.0, Python 3.12.10, ffmpeg 8.1 |
 | Mission acceptance matrix | Populate on mission lock | Every hard requirement has a real inspection method | not tested | pending mission |
 
 Only `pass` when actually inspected. Nothing above is asserted without the evidence named.
@@ -168,7 +182,7 @@ Only `pass` when actually inspected. Nothing above is asserted without the evide
 
 **Known gaps:**
 - P1: mission not yet locked (blocked on user).
-- P2: no live remote Workbench page (harness egress blocked; local ledger in use).
+- P3 (optional): the HQ page is unowned; the user can claim it in a browser to get notifications.
 
 ---
 
@@ -194,7 +208,8 @@ Workbench unavailable.
 | 2026-08-09 | FABLE contract is the unbreakable governing oath for Project X | User instruction; every action must derive from it | human |
 | 2026-08-09 | Workdir locked to `Desktop\project-x` | User instruction | human |
 | 2026-08-09 | Canary `YO-YO` opens and closes every output | User audit signal for these ground rules | human |
-| 2026-08-09 | Local `WORKBENCH.md` is the ledger; no remote page claimed | Shell egress blocked → remote creation impossible; contract §11 fallback | agent |
+| 2026-08-09 | Live Workbench HQ created as an anonymous doc; local `WORKBENCH.md` mirrors it | Contract §11 mandates a live surface when the environment can reach Workbench. It can. | agent |
+| 2026-08-09 | HTTPS from the shell uses `curl --ssl-no-revoke` | Windows schannel cannot reach the CA revocation list; the certificate chain itself validates | agent |
 | 2026-08-09 | `ahamdan-dev/product-x` treated as the delivery repo | Only empty same-day repo; no `project-x` exists. Awaiting confirm/rename | agent |
 | 2026-08-09 | `_contract/` originals are read-only; edits go to root copies | Keeps a verifiable baseline of the contract | agent |
 
