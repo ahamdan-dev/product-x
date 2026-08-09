@@ -4,9 +4,8 @@
  * Two windows, on purpose:
  *
  *   COMPANION — a small, frameless, transparent, always-on-top window that holds the character and
- *   any floating surfaces. It is click-through everywhere except over actual content, so it can sit
- *   over the user's real work (UWorld, Anki, a PDF) without stealing their clicks. This is the
- *   difference between an ambient companion and a window that's in the way.
+ *   any floating surfaces. It remains interactive so its controls and drag handle cannot become
+ *   stranded behind an input-routing state.
  *
  *   WORLD — a normal resizable window for the board and the simulations. Summoned by the companion,
  *   not always present.
@@ -75,10 +74,6 @@ function createCompanion() {
   // but NOT above OS-level fullscreen video, which would be obnoxious.
   companion.setAlwaysOnTop(true, 'screen-saver');
   companion.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: false });
-
-  // Start fully click-through. The renderer turns this off per-region via `companion:setInteractive`
-  // as the pointer enters real content, so empty transparent pixels never eat a click.
-  companion.setIgnoreMouseEvents(true, { forward: true });
 
   companion.once('ready-to-show', () => companion?.show());
   companion.on('closed', () => { companion = null; });

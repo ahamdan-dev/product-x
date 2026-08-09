@@ -58,7 +58,7 @@ export function WorldView() {
         camera={{ fov: FOV_DEG, near: 0.5, far: 220, position: [26, 24, 26] }}
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.ACESFilmicToneMapping;
-          gl.toneMappingExposure = 1.02;
+          gl.toneMappingExposure = 1.16;
           gl.outputColorSpace = THREE.SRGBColorSpace;
           // Clear to fully transparent. `alpha: true` only makes transparency *possible*; without a
           // zero-alpha clear color three.js still clears to opaque black.

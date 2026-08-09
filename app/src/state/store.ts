@@ -13,6 +13,11 @@ import {
 import { seedLearner } from '../learner/seed';
 import { DISTRICT_SLOTS } from '../world/board';
 import type { CompanionMode } from '../companion/behavior';
+import {
+  readCharacterPreference,
+  writeCharacterPreference,
+  type CompanionCharacter,
+} from '../companion/preference';
 import type { FramingId, YawPresetId } from '../world/camera';
 
 /**
@@ -79,7 +84,7 @@ interface AppState {
 
   // ── Companion ────────────────────────────────────────────────────────────
   mode: CompanionMode;
-  character: 'male' | 'female';
+  character: CompanionCharacter;
   /** Which perimeter space the companion is standing on. */
   companionSpace: number;
 
@@ -90,7 +95,7 @@ interface AppState {
   // ── Actions ──────────────────────────────────────────────────────────────
   record: (e: EvidenceEvent) => void;
   setMode: (m: CompanionMode) => void;
-  setCharacter: (c: 'male' | 'female') => void;
+  setCharacter: (c: CompanionCharacter) => void;
   setPreset: (p: YawPresetId) => void;
   setFraming: (f: FramingId) => void;
   focusDistrict: (id: string | null) => void;
@@ -208,7 +213,7 @@ export const useApp = create<AppState>((set) => ({
   focusedDistrict: null,
 
   mode: 'ask',
-  character: 'female',
+  character: readCharacterPreference(),
   companionSpace: 0,
 
   surfaces: {},
@@ -221,7 +226,10 @@ export const useApp = create<AppState>((set) => ({
   }),
 
   setMode: (mode) => set({ mode }),
-  setCharacter: (character) => set({ character }),
+  setCharacter: (character) => {
+    writeCharacterPreference(character);
+    set({ character });
+  },
   setPreset: (preset) => set({ preset }),
   setFraming: (framing) => set({ framing }),
   focusDistrict: (focusedDistrict) => set({ focusedDistrict }),

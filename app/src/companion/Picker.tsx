@@ -363,10 +363,10 @@ interface RigProps {
   /** Selected or hovered: the rig leans into the light and, if it can, plays its reward clip. */
   excited: boolean;
   /** Reports what the rig turned out to be, back out to the DOM that has to frame and label it. */
-  onMeasured: (facts: RigFacts) => void;
+  onMeasured?: (facts: RigFacts) => void;
 }
 
-function Rig({ url, excited, onMeasured }: RigProps) {
+export function CompanionRig({ url, excited, onMeasured }: RigProps) {
   const gltf = useGLTF(url);
   const prepared = useMemo(
     () => prepareRig(gltf as unknown as { scene: THREE.Object3D; animations: THREE.AnimationClip[] }),
@@ -376,7 +376,7 @@ function Rig({ url, excited, onMeasured }: RigProps) {
   // Both facts are discovered inside the canvas, on load, but are needed outside it: the note is
   // rendered by the card, and the width feeds the framing solve that decides this rig's own scale.
   useEffect(() => {
-    onMeasured({ note: prepared.note, width: prepared.width });
+    onMeasured?.({ note: prepared.note, width: prepared.width });
   }, [prepared, onMeasured]);
 
   const group = useRef<THREE.Group>(null);
@@ -449,12 +449,14 @@ function Rig({ url, excited, onMeasured }: RigProps) {
  * the upper left, and a cool bounce from the lower right. Three lights, as `World.tsx` establishes
  * — a hard three-point studio rig is what makes hobby 3D look like hobby 3D.
  */
-function Lighting() {
+export function CompanionLighting() {
   return (
     <>
-      <hemisphereLight args={['#FFFFFF', '#C9C4BA', 1.05]} />
-      <directionalLight position={[-2.2, 3.2, 2.6]} intensity={1.35} color="#FBD1B8" />
-      <directionalLight position={[2.6, 1.4, -1.8]} intensity={0.42} color="#A9E3F1" />
+      <ambientLight intensity={0.58} color="#FFFDF9" />
+      <hemisphereLight args={['#FFFFFF', '#D8D3CB', 1.28]} />
+      <directionalLight position={[-2.8, 3.8, 4.2]} intensity={2.05} color="#FFF5EC" />
+      <directionalLight position={[3.2, 2.2, 3.1]} intensity={1.08} color="#EAF6FA" />
+      <directionalLight position={[-1.2, 3.4, -3.2]} intensity={0.62} color="#FFFFFF" />
     </>
   );
 }
@@ -480,7 +482,7 @@ interface SceneProps {
 function Scene({ urls, activeIndex, onMeasured, slots }: SceneProps) {
   return (
     <>
-      <Lighting />
+      <CompanionLighting />
       {urls.map((url, i) => {
         // No slot yet means the DOM has not been measured, so the rig would land in the wrong
         // place; skip it for that one frame rather than show it sliding into position.
@@ -498,7 +500,7 @@ function Scene({ urls, activeIndex, onMeasured, slots }: SceneProps) {
             visible={slot.framed}
           >
             <GroundShade radius={0.42} />
-            <Rig
+          <CompanionRig
               url={url}
               excited={activeIndex === i}
               onMeasured={facts => onMeasured(i, facts)}

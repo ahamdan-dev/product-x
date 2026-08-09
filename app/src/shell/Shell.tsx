@@ -41,7 +41,6 @@ import {
 } from './surfaces';
 import { initialGeometry, panelById, panelBySlug, panelSurfaceId, type PanelId } from './panels';
 import { hashPanel, reconcileOpenPanels } from './openPanels';
-import { usePassthrough } from './usePassthrough';
 import './shell.css';
 
 const MapSurface = lazy(() => import('./MapSurface'));
@@ -54,15 +53,6 @@ function Settling() {
 }
 
 export function Shell() {
-  /**
-   * The window claims the pointer only where it actually paints.
-   *
-   * Point 1 above — the shell paints nothing — is what makes this necessary rather than optional. Once
-   * the space between surfaces is the user's real desktop, a window that still intercepts clicks there is
-   * obscuring their *function* while no longer obscuring their view, and the rule names both.
-   */
-  usePassthrough();
-
   const [active, setActive] = useState<SurfaceId>(() => {
     const r = resolveRoute(window.location.hash);
     return r === 'companion' ? 'today' : r;

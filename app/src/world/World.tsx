@@ -135,7 +135,7 @@ export function World({ theme }: WorldProps) {
         args={[
           new THREE.Color('#FFF8F0'),   // warm sky, not neutral
           new THREE.Color(groundColor(theme)),
-          1.25,                          // slightly brighter for warmth
+          1.62,                          // slightly brighter for warmth
         ]}
       />
 
@@ -143,8 +143,8 @@ export function World({ theme }: WorldProps) {
           3D and perimeter stays readable. Shadow map deliberately small: soft, cheap, and districts
           are chunky enough that detail is wasted. This is the WARM KEY from the FIX. */}
       <directionalLight
-        position={[-18, 28, -14]}       // slightly higher for softer shadows
-        intensity={1.65}                 // stronger for premium look
+        position={[-16, 26, 20]}        // slightly higher for softer shadows
+        intensity={2.3}                  // stronger for premium look
         color={new THREE.Color('#FFF4E8')}   // warmer tone
         castShadow
         shadow-mapSize={[1024, 1024]}
@@ -161,10 +161,13 @@ export function World({ theme }: WorldProps) {
       {/* Cool fill from opposite side — the COOL FILL from the FIX. Keeps shadow interiors from
           going dead, adds dimension. Using evStable color for subtle evidence-ramp tie-in. */}
       <directionalLight
-        position={[16, 12, 18]}          // higher for better fill
-        intensity={0.48}                  // stronger for more dimension
+        position={[18, 14, 18]}          // higher for better fill
+        intensity={1.12}                  // stronger for more dimension
         color={new THREE.Color(p.evStable)}   // cool conviction hue
       />
+
+      <ambientLight intensity={0.38} color="#FFFDF9" />
+      <directionalLight position={[-8, 12, -22]} intensity={0.62} color="#FFFFFF" />
 
       {/* Ground. Sized generously past the board so the horizon never shows an edge at any framing. */}
       <mesh

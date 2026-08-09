@@ -1,24 +1,22 @@
 /**
- * The companion window. Transparent, frameless, always on top, click-through by default.
- *
- * The hard problem this file solves: a transparent window is still a window. Left alone it eats every
- * click in its rectangle, so the student cannot click the lecture slides behind it. The fix is to keep
- * the window click-through (`setIgnoreMouseEvents`) and turn interaction ON only while the pointer is
- * actually over real content. That means the renderer has to know where its own opaque pixels are,
- * which is why the interactive region is an explicit element rather than "the whole window."
+ * The companion window. Transparent, frameless, always on top, and directly interactive.
  *
  * Controls follow the user's rule exactly: consistent position, hidden at rest, revealed on hover,
  * always offering both minimize and close. On a window with no OS chrome, that is not polish — it is
  * the only way out.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { Suspense, useEffect, useRef, useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Token } from '../companion/Token';
+import { CompanionLighting, CompanionRig } from '../companion/Picker';
+import {
+  COMPANION_CHARACTER_KEY,
+  readCharacterPreference,
+} from '../companion/preference';
+import { resolveAssetUrl } from '../companion/glbSource';
 import { BehaviorArbiter } from '../companion/arbiter';
 import type { ClipName } from '../companion/behavior';
-import { useTheme } from '../ui/useTheme';
 import { useApp } from '../state/store';
 import './companionView.css';
 
@@ -32,7 +30,6 @@ const ALL_CLIPS: ReadonlySet<ClipName> = new Set<ClipName>([
 
 /** The Electron bridge. Absent in a plain browser, so every call is guarded. */
 type Px = {
-  setInteractive: (v: boolean) => Promise<void>;
   moveCompanionBy: (dx: number, dy: number) => Promise<void>;
   minimize: () => Promise<void>;
   close: () => Promise<void>;
@@ -43,8 +40,9 @@ function px(): Px | null {
 }
 
 export function CompanionView() {
-  const { theme } = useTheme();
   const mode = useApp(s => s.mode);
+  const character = useApp(s => s.character);
+  const setCharacter = useApp(s => s.setCharacter);
 
   const arbiter = useRef<BehaviorArbiter | null>(null);
   if (!arbiter.current) {
@@ -56,6 +54,14 @@ export function CompanionView() {
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => { arbiter.current?.setMode(mode); }, [mode]);
+
+  useEffect(() => {
+    const syncCharacter = (event: StorageEvent) => {
+      if (event.key === COMPANION_CHARACTER_KEY) setCharacter(readCharacterPreference());
+    };
+    window.addEventListener('storage', syncCharacter);
+    return () => window.removeEventListener('storage', syncCharacter);
+  }, [setCharacter]);
 
   // Session open is a real trigger and it should fire once, on mount — the companion arriving is the
   // first thing the student sees, and it must not look like a page load.
@@ -80,20 +86,18 @@ export function CompanionView() {
     return () => window.clearInterval(t);
   }, []);
 
-  // ── Click-through ───────────────────────────────────────────────────────────
-  // Interaction is enabled on pointer-enter of the content and disabled on leave. The `forward: true`
-  // flag on the main-process side is what makes the enter event arrive at all while the window is
-  // still ignoring the mouse — without it, the window can never learn the pointer is over it and the
-  // companion becomes permanently non-interactive.
   const enter = useCallback(() => {
     setHovered(true);
-    void px()?.setInteractive(true);
   }, []);
 
   const leave = useCallback(() => {
     setHovered(false);
-    void px()?.setInteractive(false);
   }, []);
+
+  const companionUrl = resolveAssetUrl(
+    character === 'male' ? 'companions/companion-a.glb' : 'companions/companion-b.glb',
+    document.baseURI,
+  );
 
   // ── Dragging the window itself ──────────────────────────────────────────────
   // A frameless window has no title bar, so the token *is* the handle. Deltas go to the main process
@@ -152,19 +156,21 @@ export function CompanionView() {
            * inside the frame with headroom. The token is the one object a user studies closely, so it
            * gets the whole stage rather than a crop of it.
            */
-          camera={{ fov: 30, near: 0.1, far: 20, position: [0, 0.86, 3.6] }}
+          camera={{ fov: 30, near: 0.1, far: 20, position: [0, 0.88, 3.8] }}
           onCreated={({ gl, camera }) => {
             gl.toneMapping = THREE.ACESFilmicToneMapping;
+            gl.toneMappingExposure = 1.16;
             gl.outputColorSpace = THREE.SRGBColorSpace;
             // Fully transparent clear: any clear color at all becomes a visible rectangle on the
             // user's desktop.
             gl.setClearAlpha(0);
-            camera.lookAt(0, 0.52, 0);
+            camera.lookAt(0, 0.88, 0);
           }}
         >
-          <hemisphereLight args={['#FFFFFF', '#8A8F92', 1.0]} />
-          <directionalLight position={[-2, 3.4, 2.2]} intensity={1.15} color="#FFF4E3" />
-          <Token clip={clip} theme={theme} playing={playing} attention={hovered ? 1 : 0} scale={1} />
+          <CompanionLighting />
+          <Suspense fallback={null}>
+            <CompanionRig url={companionUrl} excited={hovered || !playing || clip.startsWith('celebrate.')} />
+          </Suspense>
         </Canvas>
 
         {/* Controls. One consistent place — top-right of the stage — hidden until hover. */}
