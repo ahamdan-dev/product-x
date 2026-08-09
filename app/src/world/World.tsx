@@ -15,12 +15,15 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { District } from './District';
 import { Board3D } from './Board3D';
+import { BOARD } from './board';
 import { useCameraRig } from './useCameraRig';
 import { visibleDistricts } from './camera';
 import { groundColor, WORLD_PALETTE, type Theme } from './districtMaterial';
 import {
   useApp, readDistrict, slotPosition, slotRadius, type DistrictReading,
 } from '../state/store';
+import { CompanionRig } from '../companion/Picker';
+import { resolveAssetUrl } from '../companion/glbSource';
 
 /** How often to re-test which districts are on screen. */
 const CULL_INTERVAL_MS = 120;
@@ -37,6 +40,8 @@ export function World({ theme }: WorldProps) {
   const districts = useApp(s => s.districts);
   const concepts = useApp(s => s.concepts);
   const companionSpace = useApp(s => s.companionSpace);
+  const character = useApp(s => s.character);
+  const moveCompanion = useApp(s => s.moveCompanion);
   const setFraming = useApp(s => s.setFraming);
 
   // Where the camera should orbit. Focusing a district moves the orbit point to it; clearing focus
@@ -102,6 +107,11 @@ export function World({ theme }: WorldProps) {
   });
 
   const p = WORLD_PALETTE[theme];
+  const companionBoardSpace = BOARD[companionSpace] ?? BOARD[0]!;
+  const companionUrl = resolveAssetUrl(
+    character === 'male' ? 'companions/companion-a.glb' : 'companions/companion-b.glb',
+    document.baseURI,
+  );
 
   /**
    * The ground is a SHADOW CATCHER, not a floor.
@@ -183,8 +193,20 @@ export function World({ theme }: WorldProps) {
       <Board3D
         theme={theme}
         companionSpace={companionSpace}
-        onSelectSpace={() => { /* wired to the card contract in the action-card pass */ }}
+        onSelectSpace={moveCompanion}
       />
+
+      <group
+        position={[
+          companionBoardSpace.position[0] - companionBoardSpace.facing[0] * 1.7,
+          0.43,
+          companionBoardSpace.position[2] - companionBoardSpace.facing[2] * 1.7,
+        ]}
+        rotation={[0, companionBoardSpace.rotationY + Math.PI, 0]}
+        scale={1.05}
+      >
+        <CompanionRig url={companionUrl} excited={false} />
+      </group>
 
       {placed.map(({ reading, position, radius }) => (
         <District

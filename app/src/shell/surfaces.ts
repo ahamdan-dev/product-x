@@ -89,7 +89,9 @@ export function withPanel(surfaceHash: string, slug: string | null): string {
  */
 export function resolveRoute(hash: string): Route {
   if (hash.startsWith('#/companion')) return 'companion';
-  const found = SURFACES.find(s => s.hash === baseHash(hash));
+  const surfaceHash = baseHash(hash);
+  if (surfaceHash === '#/world') return 'map';
+  const found = SURFACES.find(s => s.hash === surfaceHash);
   return found ? found.id : DEFAULT_SURFACE;
 }
 

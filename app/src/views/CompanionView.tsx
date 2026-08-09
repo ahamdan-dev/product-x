@@ -15,6 +15,7 @@ import {
   readCharacterPreference,
 } from '../companion/preference';
 import { resolveAssetUrl } from '../companion/glbSource';
+import { shouldStartCompanionDrag } from './companionDrag';
 import { BehaviorArbiter } from '../companion/arbiter';
 import type { ClipName } from '../companion/behavior';
 import { useApp } from '../state/store';
@@ -52,6 +53,7 @@ export function CompanionView() {
   const [clip, setClip] = useState<ClipName>('idle.breathe');
   const [playing, setPlaying] = useState(true);
   const [hovered, setHovered] = useState(false);
+  const [launchingWorld, setLaunchingWorld] = useState(false);
 
   useEffect(() => { arbiter.current?.setMode(mode); }, [mode]);
 
@@ -94,6 +96,14 @@ export function CompanionView() {
     setHovered(false);
   }, []);
 
+  const openBoard = useCallback(async () => {
+    if (launchingWorld) return;
+    setLaunchingWorld(true);
+    await new Promise(resolve => window.setTimeout(resolve, 520));
+    await px()?.openWorld();
+    setLaunchingWorld(false);
+  }, [launchingWorld]);
+
   const companionUrl = resolveAssetUrl(
     character === 'male' ? 'companions/companion-a.glb' : 'companions/companion-b.glb',
     document.baseURI,
@@ -106,7 +116,7 @@ export function CompanionView() {
   const last = useRef({ x: 0, y: 0 });
 
   const onPointerDown = (e: React.PointerEvent) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || !shouldStartCompanionDrag(e.target)) return;
     const el = e.currentTarget as HTMLElement;
     dragging.current = true;
     last.current = { x: e.screenX, y: e.screenY };
@@ -131,7 +141,7 @@ export function CompanionView() {
   return (
     <div className="x-companion">
       <div
-        className={`x-companion__stage ${hovered ? 'is-hovered' : ''}`}
+        className={`x-companion__stage ${hovered ? 'is-hovered' : ''} ${launchingWorld ? 'is-launching-world' : ''}`}
         onPointerEnter={enter}
         onPointerLeave={leave}
         onPointerDown={onPointerDown}
@@ -169,17 +179,26 @@ export function CompanionView() {
         >
           <CompanionLighting />
           <Suspense fallback={null}>
-            <CompanionRig url={companionUrl} excited={hovered || !playing || clip.startsWith('celebrate.')} />
+            <CompanionRig url={companionUrl} excited={launchingWorld || hovered || !playing || clip.startsWith('celebrate.')} />
           </Suspense>
         </Canvas>
+
+        <div className="x-companion__menuHint" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
 
         {/* Controls. One consistent place — top-right of the stage — hidden until hover. */}
         <div className="x-companion__controls">
           <button
+            data-companion-control
             type="button"
             className="x-cctl"
-            title="Open the world"
-            onClick={() => void px()?.openWorld()}
+            title="Open board map"
+            aria-label="Open board map"
+            disabled={launchingWorld}
+            onClick={() => void openBoard()}
           >
             <svg viewBox="0 0 16 16" aria-hidden="true">
               <circle cx="8" cy="8" r="5.6" />
@@ -187,6 +206,7 @@ export function CompanionView() {
             </svg>
           </button>
           <button
+            data-companion-control
             type="button"
             className="x-cctl"
             title="Minimize"
@@ -195,6 +215,7 @@ export function CompanionView() {
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 8.5h8" /></svg>
           </button>
           <button
+            data-companion-control
             type="button"
             className="x-cctl x-cctl--close"
             title="Close"

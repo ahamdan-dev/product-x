@@ -39,6 +39,10 @@ describe('routing', () => {
     for (const s of SURFACES) expect(resolveRoute(s.hash)).toBe(s.id);
   });
 
+  it('keeps the native world command pointed at the Map', () => {
+    expect(resolveRoute('#/world')).toBe('map');
+  });
+
   it('matches the companion window by prefix, since it appends its own state', () => {
     expect(resolveRoute('#/companion')).toBe('companion');
     expect(resolveRoute('#/companion?state=talking')).toBe('companion');

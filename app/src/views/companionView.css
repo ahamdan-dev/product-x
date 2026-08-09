@@ -32,7 +32,46 @@
 
 .x-companion__stage.is-hovered .x-companion__canvas:active { cursor: grabbing; }
 
+.x-companion__stage.is-launching-world .x-companion__canvas {
+  animation: x-companion-enter-world 520ms var(--x-ease) both;
+}
+
+@keyframes x-companion-enter-world {
+  0% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+  48% { opacity: 1; transform: translateY(-8px) scale(1.025); filter: brightness(1.12); }
+  100% { opacity: 0.18; transform: translateY(8px) scale(0.92); filter: brightness(1.2); }
+}
+
 /* ── Controls: consistent top-right, revealed on hover ────────────────────── */
+
+.x-companion__menuHint {
+  position: absolute;
+  top: var(--x-s-snug);
+  right: var(--x-s-snug);
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-content: center;
+  gap: 3px;
+  border: 1px solid var(--x-line);
+  border-radius: var(--x-r-sm);
+  background: color-mix(in oklab, var(--x-surface) 82%, transparent);
+  pointer-events: none;
+  transition: opacity var(--x-t-fast) var(--x-ease-soft);
+}
+
+.x-companion__menuHint span {
+  display: block;
+  width: 10px;
+  height: 1.5px;
+  border-radius: var(--x-r-pill);
+  background: var(--x-ink-3);
+}
+
+.x-companion__stage.is-hovered .x-companion__menuHint,
+.x-companion__stage:focus-within .x-companion__menuHint {
+  opacity: 0;
+}
 
 .x-companion__controls {
   position: absolute;
@@ -43,6 +82,7 @@
   opacity: 0;
   transform: translateY(-3px);
   pointer-events: none;
+  z-index: 2;
   transition: opacity var(--x-t-fast) var(--x-ease-soft),
               transform var(--x-t-fast) var(--x-ease);
 }
@@ -81,6 +121,7 @@
 
 .x-cctl:hover { background: var(--x-surface-2); color: var(--x-ink); }
 .x-cctl:active { transform: translateY(0.5px); }
+.x-cctl:disabled { cursor: wait; }
 
 .x-cctl--close:hover {
   background: color-mix(in oklab, var(--x-oxblood) 12%, var(--x-surface));
@@ -90,5 +131,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .x-companion__controls { transform: none; }
+  .x-companion__stage.is-launching-world .x-companion__canvas { animation: none; }
   .x-cctl:active { transform: none; }
 }
