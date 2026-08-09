@@ -1,0 +1,214 @@
+/* ============================================================================
+   Surface — floating container. Every value traces to tokens.css.
+   ========================================================================= */
+
+.x-surface {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--x-r-lg);
+  border: 1px solid var(--x-line);
+  box-shadow: var(--x-e2);
+  overflow: hidden;
+  /* Contain paint so a surface never triggers a full-page repaint while dragging. */
+  contain: layout paint style;
+  will-change: left, top;
+}
+
+/* Frosted only over live content. The inner top highlight is what makes it read as physical
+   rather than as a blur filter applied to a rectangle. */
+.x-surface.is-glass {
+  background: var(--x-glass-bg);
+  backdrop-filter: var(--x-glass-blur);
+  -webkit-backdrop-filter: var(--x-glass-blur);
+  box-shadow: var(--x-e2), var(--x-glass-hi);
+}
+
+.x-surface.is-solid {
+  background: var(--x-surface);
+}
+
+/* Lifted while being moved — the shadow grows because the surface is literally further from the
+   page. Both parts of the two-part shadow scale, or it reads as a CSS trick. */
+.x-surface.is-gesturing {
+  box-shadow: var(--x-e3);
+  transition: box-shadow var(--x-t-fast) var(--x-ease);
+}
+.x-surface:not(.is-gesturing) {
+  transition: box-shadow var(--x-t-base) var(--x-ease), height var(--x-t-base) var(--x-ease);
+}
+
+.x-surface.is-collapsed {
+  height: auto;
+}
+
+/* ── Title bar ───────────────────────────────────────────────────────────── */
+
+.x-surface__bar {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--x-s-base);
+  padding: var(--x-s-base) var(--x-s-base) var(--x-s-snug) var(--x-s-comfy);
+  cursor: default;
+  /* The bar is the drag handle, so text selection in it would fight the gesture. */
+  user-select: none;
+  flex: 0 0 auto;
+  min-height: 44px;
+}
+
+.x-surface__id {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.x-surface__title {
+  margin: 0;
+  font-family: var(--x-font-display);
+  font-size: var(--x-fs-16);
+  font-weight: 600;
+  font-variation-settings: 'wdth' 96;
+  letter-spacing: -0.012em;
+  line-height: 1.2;
+  color: var(--x-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Controls: consistent position, hidden at rest, revealed on hover or focus ─────── */
+
+.x-surface__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--x-s-tight);
+  flex: 0 0 auto;
+  opacity: 0;
+  /* Nudged in slightly so the reveal has direction — pure opacity fades read as a placeholder. */
+  transform: translateX(3px);
+  transition:
+    opacity var(--x-t-fast) var(--x-ease-soft),
+    transform var(--x-t-fast) var(--x-ease);
+  pointer-events: none;
+}
+
+.x-surface:hover .x-surface__controls,
+.x-surface:focus-within .x-surface__controls,
+.x-surface.is-gesturing .x-surface__controls {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Keyboard users get them unconditionally — hover-only would be inaccessible. */
+@media (hover: none) {
+  .x-surface__controls { opacity: 1; transform: none; pointer-events: auto; }
+}
+
+.x-surface__ctl {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--x-r-sm);
+  background: transparent;
+  color: var(--x-ink-3);
+  cursor: pointer;
+  transition:
+    background var(--x-t-fast) var(--x-ease-soft),
+    color var(--x-t-fast) var(--x-ease-soft),
+    border-color var(--x-t-fast) var(--x-ease-soft);
+}
+
+.x-surface__ctl svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.x-surface__ctl:hover {
+  background: var(--x-surface-2);
+  border-color: var(--x-line);
+  color: var(--x-ink);
+}
+
+.x-surface__ctl:active {
+  /* Real press feedback — a color-only hover with no active state is a generated-UI tell. */
+  transform: translateY(0.5px);
+  background: color-mix(in oklab, var(--x-surface-2) 82%, var(--x-ink));
+}
+
+/* Close leans oxblood on hover only. Destructive intent, shown at the moment of intent. */
+.x-surface__ctl--close:hover {
+  background: color-mix(in oklab, var(--x-oxblood) 12%, var(--x-surface));
+  border-color: color-mix(in oklab, var(--x-oxblood) 34%, var(--x-line));
+  color: var(--x-oxblood);
+}
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+
+.x-surface__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 var(--x-s-comfy) var(--x-s-comfy);
+  overflow: auto;
+  user-select: text;
+  /* Thin, unobtrusive scrollbar — the default Windows bar cheapens a premium surface. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--x-line) transparent;
+}
+
+.x-surface__body::-webkit-scrollbar { width: 8px; height: 8px; }
+.x-surface__body::-webkit-scrollbar-track { background: transparent; }
+.x-surface__body::-webkit-scrollbar-thumb {
+  background: var(--x-line);
+  border-radius: var(--x-r-pill);
+  /* Inset via a transparent border so the thumb reads as floating in the gutter. */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.x-surface__body::-webkit-scrollbar-thumb:hover { background: var(--x-ink-3); }
+
+/* ── Resize grips: invisible, generous hit areas ─────────────────────────── */
+
+.x-surface__grip {
+  position: absolute;
+  touch-action: none;
+}
+
+.x-surface__grip--e  { top: 8px; bottom: 14px; right: -3px; width: 9px; cursor: ew-resize; }
+.x-surface__grip--w  { top: 8px; bottom: 14px; left:  -3px; width: 9px; cursor: ew-resize; }
+.x-surface__grip--s  { left: 14px; right: 14px; bottom: -3px; height: 9px; cursor: ns-resize; }
+.x-surface__grip--se { right: -3px; bottom: -3px; width: 17px; height: 17px; cursor: nwse-resize; }
+.x-surface__grip--sw { left:  -3px; bottom: -3px; width: 17px; height: 17px; cursor: nesw-resize; }
+
+/* The corner gets a drawn affordance so resize is discoverable, revealed with the controls. */
+.x-surface__grip--se::after {
+  content: '';
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--x-ink-3);
+  border-bottom: 1.5px solid var(--x-ink-3);
+  border-bottom-right-radius: 2px;
+  opacity: 0;
+  transition: opacity var(--x-t-fast) var(--x-ease-soft);
+}
+
+.x-surface:hover .x-surface__grip--se::after,
+.x-surface:focus-within .x-surface__grip--se::after {
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .x-surface__controls { transform: none; }
+}

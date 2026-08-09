@@ -1,0 +1,23 @@
+const fs=require('node:fs');
+const OUT='C:/Users/jhamdan/Desktop/project-x/_shots';
+const hb=(m)=>fs.appendFileSync(OUT+'/hb.txt',m+'\n');
+fs.mkdirSync(OUT,{recursive:true});
+hb('01 top');
+const {app,BrowserWindow}=require('electron');
+hb('02 required');
+process.on('uncaughtException',e=>{hb('EXC '+e.stack);app.exit(9);});
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+hb('03 switch');
+app.whenReady().then(async()=>{
+  hb('04 ready');
+  const w=new BrowserWindow({width:800,height:600,show:false,backgroundColor:'#15181A'});
+  hb('05 window');
+  await w.loadURL('http://localhost:5274/#/world');
+  hb('06 loaded');
+  await new Promise(r=>setTimeout(r,3000));
+  const img=await w.webContents.capturePage();
+  hb('07 captured '+img.getSize().width+'x'+img.getSize().height);
+  fs.writeFileSync(OUT+'/t2.png',img.toPNG());
+  hb('08 written');
+  app.exit(0);
+}).catch(e=>{hb('REJ '+e.stack);app.exit(8);});

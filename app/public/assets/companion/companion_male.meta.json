@@ -1,0 +1,19 @@
+{
+  "gender": "male",
+  "clips": [
+    "idle.breathe",
+    "idle.lookAround",
+    "locomote.stroll",
+    "locomote.walk",
+    "locomote.jog",
+    "locomote.run",
+    "study.walkReading",
+    "study.explain",
+    "celebrate.small",
+    "celebrate.milestone",
+    "celebrate.rare"
+  ],
+  "source_fps": 30,
+  "tris": 1552,
+  "bones": 22
+}

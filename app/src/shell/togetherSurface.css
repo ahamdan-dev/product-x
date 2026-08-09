@@ -1,0 +1,256 @@
+/* Together. Cooperative, calm, and deliberately free of anything that ranks people.
+   Every color is a --x-* token. No hex, no rgba() literal.
+
+   Same governing constraint as Today: this renders in a TRANSPARENT always-on-top window over the
+   student's real desktop, and the shell paints nothing. So every text block sits on frosted glass, and
+   the fill is composed from --x-surface via color-mix rather than taken from --x-glass-bg (90% alpha)
+   or --x-veil (68%) — both of those were authored for an opaque canvas and measure as an opaque sheet
+   over a live desktop. Contrast derivation is in todaySurface.css; the alphas match so the two surfaces
+   are visibly one material system.
+
+   And the same layout law: rows live inside ONE pane with SHARED columns. The version this replaces
+   stretched `name | topic | count` across 1850px with a ~1100px dead gap in the middle of every row,
+   which is the clearest possible tell of an unstyled prototype. */
+
+.x-together {
+  /* Narrower measure than Today's 56rem, on purpose: this surface has no long-form prose, only
+     name/topic/count triples. A wider column just re-opens the dead gap. */
+  --x-tg-col: 46rem;
+
+  --x-tg-fill: color-mix(in oklab, var(--x-surface) 58%, transparent);
+  --x-tg-hairline: color-mix(in oklab, var(--x-line) 62%, transparent);
+
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* No `scrollbar-width`/`scrollbar-color`: in Chromium 121+ either property switches to the standard
+     scrollbar renderer and ignores the ::-webkit-scrollbar rules below, which is what left a visible
+     grey thumb on the right edge. The pseudo-elements are the only route to a transparent track and a
+     hover-only thumb. */
+}
+.x-together::-webkit-scrollbar { width: 8px; }
+.x-together::-webkit-scrollbar-track { background: transparent; }
+.x-together::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--x-r-pill);
+  background-clip: content-box;
+  transition: background-color var(--x-t-base) var(--x-ease-soft);
+}
+.x-together:hover::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklab, var(--x-line-2) 78%, transparent);
+}
+
+.x-together__inner {
+  width: min(var(--x-tg-col), 100%);
+  margin: 0 auto;
+  padding: var(--x-s-loose) var(--x-s-comfy) var(--x-s-vast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-comfy);
+}
+
+/* ── The pane material ────────────────────────────────────────────────────────
+   The same secondary glass as Today's .x-today__pane. Not composed from .x-glass: that token-layer
+   class carries the 90% fill and --x-e-menu, and these are secondary panels over a live desktop. */
+.x-together__pane {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--x-tg-fill);
+  -webkit-backdrop-filter: var(--x-glass-blur);
+  backdrop-filter: var(--x-glass-blur);
+  border: var(--x-glass-edge);
+  border-radius: var(--x-r-xl);
+  box-shadow: var(--x-glass-hi), var(--x-e2);
+  padding: var(--x-s-comfy) var(--x-s-comfy) var(--x-s-snug);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+}
+
+/* Light catching the top curve — what separates frosted glass from a translucent grey box. */
+.x-together__pane::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 36%;
+  z-index: -1;
+  background-image: var(--x-lit-sheen);
+  pointer-events: none;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .x-together__pane { background-color: var(--x-panel-bg); }
+}
+
+/* ── Section header ───────────────────────────────────────────────────────────
+   Defect 3 was "rows read at the same visual weight as their headers". Three devices fix it at once:
+   the eyebrow's uppercase micro-tracking, an ink one step darker than the row metadata, and a rule
+   giving the section a real top edge that the rows sit under. */
+
+.x-together__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--x-s-base);
+  padding: 0 var(--x-s-snug) var(--x-s-snug);
+  border-bottom: 1px solid var(--x-tg-hairline);
+}
+.x-together__head .x-eyebrow { color: var(--x-ink-2); }
+
+.x-together__count { font-size: var(--x-fs-11); color: var(--x-ink-3); }
+
+/* ── Rows ─────────────────────────────────────────────────────────────────────
+   The columns are declared ONCE on the list and the rows opt in with `subgrid`. This is the actual fix
+   for the dead-gap defect, and it is not the same as putting `max-content` on each row: `max-content`
+   resolves per grid container, so when every <li> was its own grid the name column was a different
+   width in every row and the topics never lined up. Shared tracks give the list real columns —
+   name sized to the longest name, topic taking the slack, count right-aligned so the digits stack.
+   Subgrid is Chromium 117+; this ships on Electron 33 = Chromium 130. */
+
+.x-together__cohort,
+.x-together__threads {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  column-gap: var(--x-s-comfy);
+}
+
+.x-together__person,
+.x-together__thread {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: baseline;
+  /* Vertical padding only: horizontal padding on a subgrid item eats into the shared end tracks and
+     would put the names back out of alignment. The pane's padding does the insetting. */
+  padding: var(--x-s-base) 0;
+  transition: background-color var(--x-t-fast) var(--x-ease-soft);
+}
+
+/* Real borders BETWEEN rows, not offset box-shadows: a `0 -1px` shadow follows the element's
+   border-radius and renders as two curved arcs at the ends rather than a rule. One pane, one left
+   edge, one right rail. */
+.x-together__person + .x-together__person,
+.x-together__thread + .x-together__thread {
+  border-top: 1px solid var(--x-tg-hairline);
+}
+.x-together__person:hover,
+.x-together__thread:hover {
+  background-color: color-mix(in oklab, var(--x-surface) 55%, transparent);
+}
+
+.x-together__who { display: inline-flex; align-items: baseline; gap: var(--x-s-snug); }
+
+.x-together__dot {
+  /* `align-self` rather than baseline alignment: a 7px dot has no baseline of its own and would sit on
+     the text baseline instead of centred on the x-height. */
+  align-self: center;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--x-r-pill);
+  background: var(--x-line-2);
+  flex: none;
+}
+
+/* Live presence: the one glow on this surface, and it is emitted by an actual state, not applied as
+   style. Three parts — the fill, a tight ring, one soft bloom — which is what reads as lit from within
+   rather than as a neon outline. */
+.x-together__dot--live {
+  background: var(--x-positive);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--x-positive) 16%, transparent),
+              0 0 10px 0 color-mix(in oklab, var(--x-positive) 34%, transparent);
+}
+
+/* The row's primary field: heavier than its own metadata, lighter than the section header's uppercase
+   eyebrow. Three tiers, so nothing reads flat. */
+.x-together__name,
+.x-together__title {
+  font-size: var(--x-fs-14);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink);
+  white-space: nowrap;
+}
+
+.x-together__focus,
+.x-together__note {
+  color: var(--x-ink-2);
+  font-size: var(--x-fs-13);
+  /* Long concept names truncate rather than reflowing the row height. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Overlap and replies are counts, not ranks — a reason to talk to someone, never a score. Tabular
+   figures so the digits line up down the column, which is why the column is right-aligned at all. */
+.x-together__overlap,
+.x-together__replies {
+  font-size: var(--x-fs-12);
+  color: var(--x-ink-2);
+  white-space: nowrap;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The honest note ──────────────────────────────────────────────────────────
+   Must stay, and must stay legible: it is the one thing stopping a reader from assuming there is a
+   multiplayer service behind this. So it gets its own small pane rather than floating on the desktop. */
+
+.x-together__honest {
+  align-self: center;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: var(--x-s-snug) var(--x-s-comfy);
+  border-radius: var(--x-r-lg);
+  font-size: var(--x-fs-12);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+  text-align: center;
+  box-shadow: var(--x-glass-hi), var(--x-e1);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .x-together__inner { padding: var(--x-s-comfy) var(--x-s-base) var(--x-s-wide); }
+  .x-together__cohort,
+  .x-together__threads { column-gap: var(--x-s-base); }
+}
+
+@media (max-width: 480px) {
+  /* Two columns, topic on its own line. At this width three legible columns do not fit, and
+     truncating the topic to nothing is worse than moving it down.
+
+     Every cell is placed EXPLICITLY. With only `grid-column: 1 / -1` on the topic, auto-placement put
+     the count on a third row on its own — observed at 480px — because the topic consumes the whole of
+     row 2 and the cursor has already passed row 1. Naming the row as well as the column is the fix. */
+  .x-together__cohort,
+  .x-together__threads {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    row-gap: var(--x-s-snug);
+  }
+  .x-together__person,
+  .x-together__thread { align-items: center; row-gap: var(--x-s-hair); }
+
+  .x-together__who,
+  .x-together__title { grid-row: 1; grid-column: 1; }
+  .x-together__overlap,
+  .x-together__replies { grid-row: 1; grid-column: 2; }
+  .x-together__focus,
+  .x-together__note { grid-row: 2; grid-column: 1 / -1; }
+
+  .x-together__honest { width: 100%; }
+}
+
+/* Motion is a courtesy, never a requirement. */
+@media (prefers-reduced-motion: reduce) {
+  .x-together__person,
+  .x-together__thread { transition: none; }
+}

@@ -1,0 +1,209 @@
+/* The summon dock. Every value is a token; nothing is invented here. */
+
+/**
+ * Centred under the surface nav, and `flex: none` so it never steals height from the stage.
+ *
+ * `position: relative` + a stacking context, because the menu is absolutely positioned against this and
+ * must land above the surface below it. `--x-z-popover` is the named rung for exactly this; a magic
+ * number here is how two overlays end up fighting.
+ */
+.x-dock {
+  position: relative;
+  z-index: var(--x-z-popover);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--x-s-snug) var(--x-s-comfy) 0;
+  flex: none;
+}
+
+/**
+ * The bar. Frosted, because it floats over the user's live desktop — this is the one context where the
+ * brand allows a shadow, since it is the only thing establishing "above the desktop" rather than
+ * "pasted into it". `.x-glass` supplies fill, blur, saturate, edge and shadow; only shape is set here.
+ */
+.x-dock__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--x-s-tight);
+  padding: var(--x-s-tight);
+  border-radius: var(--x-r-pill);
+}
+
+.x-dock__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--x-s-snug);
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: var(--x-s-snug) var(--x-s-base);
+  border-radius: var(--x-r-pill);
+  font-size: var(--x-fs-13);
+  font-weight: var(--x-w-medium);
+  letter-spacing: var(--x-tr-ui);
+  color: var(--x-ink-2);
+  cursor: pointer;
+  transition:
+    color var(--x-t-fast) var(--x-ease-soft),
+    background var(--x-t-fast) var(--x-ease-soft);
+}
+
+.x-dock__trigger:hover { color: var(--x-ink); background: var(--x-surface-2); }
+
+/* Open is a real state, so it is allowed to read as pressed. Groove, not glow — the dock is chrome,
+   and glow is rationed to things that are live or earned. */
+.x-dock__trigger[aria-expanded='true'] {
+  color: var(--x-ink);
+  background: var(--x-surface-2);
+  box-shadow: var(--x-flat);
+}
+
+.x-dock__glyph {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  fill: none;
+}
+
+/* Count of open panels. The accent, rationed: this is the one place in the dock that carries it, and
+   it carries it because a number of things currently covering your desktop is worth noticing. */
+.x-dock__count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--x-s-tight);
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--x-r-pill);
+  background: var(--x-hema-wash);
+  box-shadow: 0 0 0 1px var(--x-hema-edge);
+  color: var(--x-hema-deep);
+  font-size: var(--x-fs-11);
+  font-weight: var(--x-w-medium);
+}
+
+.x-dock__clear {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: var(--x-s-snug) var(--x-s-base);
+  border-radius: var(--x-r-pill);
+  font-size: var(--x-fs-12);
+  color: var(--x-ink-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color var(--x-t-fast) var(--x-ease-soft),
+    background var(--x-t-fast) var(--x-ease-soft);
+}
+
+.x-dock__clear:hover { color: var(--x-ink); background: var(--x-surface-2); }
+
+/* ── The menu ──────────────────────────────────────────────────────────────── */
+
+/**
+ * Absolutely positioned so opening it cannot reflow the surface underneath — a menu that pushes the
+ * page down is the clearest possible tell that it was built as a block instead of an overlay.
+ */
+.x-dock__menu {
+  position: absolute;
+  top: calc(100% + var(--x-s-tight));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - var(--x-s-wide)));
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+  padding: var(--x-s-tight);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-hair);
+  border-radius: var(--x-r-lg);
+  /* Grows from the trigger rather than fading in place — a menu that appears with no origin reads as
+     a screenshot pasted on. Transform-and-opacity only, so it stays off the main thread. */
+  animation: x-dock-in var(--x-t-base) var(--x-ease);
+  transform-origin: top center;
+  /* Hairline, hover-only scrollbar: a visible track cheapens a premium surface. */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.x-dock__menu:hover { scrollbar-color: var(--x-line) transparent; }
+.x-dock__menu::-webkit-scrollbar { width: 8px; }
+.x-dock__menu::-webkit-scrollbar-track { background: transparent; }
+.x-dock__menu::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: var(--x-r-pill);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background var(--x-t-fast) var(--x-ease-soft);
+}
+.x-dock__menu:hover::-webkit-scrollbar-thumb { background: var(--x-line); }
+.x-dock__menu::-webkit-scrollbar-thumb:hover { background: var(--x-ink-3); }
+
+@keyframes x-dock-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px) scale(.98); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0)    scale(1); }
+}
+
+.x-dock__item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: var(--x-s-base) var(--x-s-base);
+  border-radius: var(--x-r-md);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--x-t-fast) var(--x-ease-soft);
+}
+
+.x-dock__item:hover { background: var(--x-surface-2); }
+
+/* Already open: a tinted wash and a hairline, so "open" is legible without a second glyph. */
+.x-dock__item.is-open {
+  background: var(--x-hema-wash);
+  box-shadow: inset 0 0 0 1px var(--x-hema-edge);
+}
+
+.x-dock__itemHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--x-s-snug);
+}
+
+.x-dock__itemLabel {
+  font-size: var(--x-fs-14);
+  font-weight: var(--x-w-medium);
+  letter-spacing: var(--x-tr-ui);
+  color: var(--x-ink);
+}
+
+.x-dock__itemState { color: var(--x-hema); flex: none; }
+
+.x-dock__itemPurpose {
+  font-size: var(--x-fs-12);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+}
+
+/* ── Narrow windows ───────────────────────────────────────────────────────────
+   At 480px the dock keeps its full label rather than collapsing to a bare glyph: an unlabelled icon in
+   a product this size is a guess, and the bar is still only one control wide. The menu goes edge-to-edge
+   because a centred 420px card in a 480px window is two useless gutters. */
+@media (max-width: 560px) {
+  .x-dock { padding-inline: var(--x-s-snug); }
+  .x-dock__menu { width: calc(100vw - var(--x-s-comfy)); }
+  .x-dock__item { padding: var(--x-s-snug) var(--x-s-base); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* tokens.css already clamps animation duration; this drops the travel so nothing slides at all. */
+  .x-dock__menu { animation: none; }
+}

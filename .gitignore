@@ -21,3 +21,49 @@ desktop.ini
 
 # bootstrap helper artifacts
 _contract/.hq-seed.js
+
+# ─────────────────────────────────────────────────────────────────────────────
+# "ONLY WHAT'S USED IN THIS VERSION"
+#
+# The repo lives inside a working directory that also holds 1.8 GB of source material — vendored
+# upstream repos, the raw reference dump, and screenshot output. All of it was load-bearing while
+# building and none of it is part of the product. Committing it would put a multi-gigabyte push
+# between every future clone and a working checkout, and GitHub rejects single files over 100 MB
+# outright, so this is a correctness constraint and not just tidiness.
+#
+# Each exclusion below states why it is not part of this version.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Vendored upstream repos, READ-ONLY by contract. Reproducible from their own origins, and nothing
+# in app/ imports from here — the one piece actually used (gesture-lab) was copied into
+# app/src/gesture/ with its MIT license carried along.
+_vendor/
+
+# The raw reference dump: the Drive export, extracted archives, wireframe HTML, brand captures.
+# Design INPUT, not product. The decisions it drove are recorded in DESIGN-SYSTEM.md and in the
+# comments at each call site, which is the durable form.
+_refs/
+
+# Screenshot output. Regenerated on demand by tools/shot.cjs; committing them would add a binary
+# diff on every visual iteration.
+_shots/
+
+# Build scratch.
+_build/
+
+# Throwaway probe scripts written while reverse-engineering the GLB and sprite formats. Verified
+# orphaned: nothing under app/src, app/electron, package.json, or vite.config.ts references them.
+# The findings they produced live in the code and its comments, which is the durable form.
+app/.tmp-probe/
+
+# MediaPipe hand-tracking binaries — 40 MB of model + wasm, one file 7.8 MB.
+# Hand tracking is DEFERRED by explicit user order along with the three simulations, so by the
+# "only what's used in this version" rule these are out. app/src/gesture/ ships and is tested; it
+# fetches these at runtime from /vendor/mediapipe/, so the feature works as soon as the binaries are
+# restored, and their absence cannot break anything that is enabled today.
+app/public/vendor/mediapipe/
+
+# Electron installers. A build output, and at ~160 MB past GitHub's 100 MB per-file limit — the
+# TOUCH-ME launcher therefore builds from source rather than downloading a release artifact.
+app/release/
+app/dist-electron/

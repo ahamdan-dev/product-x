@@ -1,0 +1,94 @@
+/* ============================================================================
+   Companion window. Transparent everywhere except the stage.
+   ========================================================================= */
+
+.x-companion__stage {
+  position: absolute;
+  /* Inset from the window edge so the halo and the hover shadow have room to bloom without being
+     clipped by the window bounds — a clipped glow is the tell that this is a rectangle. */
+  inset: 12px;
+  border-radius: var(--x-r-xl);
+  /* No background at rest. The token floats directly on the desktop. */
+  background: transparent;
+  transition: background var(--x-t-base) var(--x-ease-soft),
+              box-shadow var(--x-t-base) var(--x-ease-soft);
+}
+
+/* On hover a faint glass plate appears behind the token. It signals "this is now interactive"
+   and gives the controls something to sit on, then leaves again. */
+.x-companion__stage.is-hovered {
+  background: var(--x-glass-bg);
+  backdrop-filter: var(--x-glass-blur);
+  -webkit-backdrop-filter: var(--x-glass-blur);
+  box-shadow: var(--x-e2), var(--x-glass-hi);
+}
+
+.x-companion__canvas {
+  position: absolute;
+  inset: 0;
+  /* Cursor communicates the drag affordance before the user tries it. */
+  cursor: grab;
+}
+
+.x-companion__stage.is-hovered .x-companion__canvas:active { cursor: grabbing; }
+
+/* ── Controls: consistent top-right, revealed on hover ────────────────────── */
+
+.x-companion__controls {
+  position: absolute;
+  top: var(--x-s-snug);
+  right: var(--x-s-snug);
+  display: flex;
+  gap: var(--x-s-hair);
+  opacity: 0;
+  transform: translateY(-3px);
+  pointer-events: none;
+  transition: opacity var(--x-t-fast) var(--x-ease-soft),
+              transform var(--x-t-fast) var(--x-ease);
+}
+
+.x-companion__stage.is-hovered .x-companion__controls,
+.x-companion__stage:focus-within .x-companion__controls {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.x-cctl {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--x-line);
+  border-radius: var(--x-r-sm);
+  background: var(--x-surface);
+  color: var(--x-ink-3);
+  cursor: pointer;
+  transition: background var(--x-t-fast) var(--x-ease-soft),
+              color var(--x-t-fast) var(--x-ease-soft),
+              border-color var(--x-t-fast) var(--x-ease-soft);
+}
+
+.x-cctl svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.x-cctl:hover { background: var(--x-surface-2); color: var(--x-ink); }
+.x-cctl:active { transform: translateY(0.5px); }
+
+.x-cctl--close:hover {
+  background: color-mix(in oklab, var(--x-oxblood) 12%, var(--x-surface));
+  border-color: color-mix(in oklab, var(--x-oxblood) 34%, var(--x-line));
+  color: var(--x-oxblood);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .x-companion__controls { transform: none; }
+  .x-cctl:active { transform: none; }
+}

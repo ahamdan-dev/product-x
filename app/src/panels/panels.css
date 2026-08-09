@@ -1,0 +1,642 @@
+/**
+ * Panel styles — LIGHT MODE ONLY, Apple frosted glass, hairlines not shadows.
+ *
+ * BRAND: use ONLY existing --x-* tokens, invent zero hex. Curved corners, .x-glass,
+ * hairlines (--x-flat) not shadows for in-window content. ONE accent --x-hema, rationed.
+ * Internal glow only where a real state emits it. Instrument Sans for everything, Geist Mono
+ * for timer and numbers. Custom hover-only hairline scrollbars.
+ *
+ * ── Two corrections made after looking at a capture over a live desktop ───────────────────────
+ *
+ * 1. **Interior wells are translucent, not solid.** These panels are frosted glass floating over the
+ *    user's real screen, but every well inside them was a *solid* `--x-surface-2`. Stacked up, that
+ *    turned a translucent panel into an opaque sheet — verified with `X_BEHIND=desktop`, where the
+ *    pattern behind the panel disappeared completely. Each well is now the same token mixed toward
+ *    `transparent`, so the panel reads as one piece of glass with structure inside it rather than as a
+ *    glass frame around an opaque card. `color-mix` from a token, so no literal enters the file.
+ *
+ * 2. **The interiors do not scroll; the surface body does.** Each root had `overflow-y: auto` plus
+ *    `max-height: 100%` while sitting inside `.x-surface__body`, which already scrolls. That is two
+ *    nested scroll containers, and the inner one rendered as a full native scrollbar complete with
+ *    arrow buttons — exactly the visible track that cheapens the product. The scrolling now happens in
+ *    one place, which already has the hairline hover-only treatment.
+ */
+
+/* The shared well fill. One place, because six components used to repeat the solid token and any fix
+   applied to five of them would have left the sixth opaque. */
+:root {
+  --x-panel-well: color-mix(in oklab, var(--x-surface-2) 62%, transparent);
+  --x-panel-well-2: color-mix(in oklab, var(--x-surface-2) 78%, transparent);
+  /* Inputs need to read as inputs, so they sit slightly brighter than the well they are in. */
+  --x-panel-field: color-mix(in oklab, var(--x-surface) 72%, transparent);
+}
+
+/* ── ActivityCenter ──────────────────────────────────────────────────────── */
+
+.x-activity {
+  padding: var(--x-s-comfy);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-wide);
+}
+
+.x-activity__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+}
+
+.x-activity__heading {
+  font-size: var(--x-fs-12);
+  font-weight: var(--x-w-medium);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+  margin: 0;
+}
+
+.x-activity__empty {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink-2);
+  margin: 0;
+  padding: var(--x-s-base);
+  background: var(--x-panel-well);
+  border-radius: var(--x-r-sm);
+}
+
+.x-activity__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-tight);
+}
+
+.x-activity__item {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink);
+  display: flex;
+  align-items: center;
+  gap: var(--x-s-tight);
+  padding: var(--x-s-snug) var(--x-s-base);
+  background: var(--x-panel-well);
+  border-radius: var(--x-r-xs);
+}
+
+.x-activity__kind {
+  font-weight: var(--x-w-medium);
+}
+
+.x-activity__dot {
+  color: var(--x-ink-3);
+}
+
+.x-activity__district {
+  color: var(--x-ink-2);
+}
+
+.x-activity__time {
+  color: var(--x-ink-3);
+  margin-left: auto;
+  font-size: var(--x-fs-12);
+}
+
+/* ── Focus Timer ─────────────────────────────────────────────────────────── */
+
+.x-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--x-s-base);
+  padding: var(--x-s-comfy);
+  background: var(--x-panel-well);
+  border-radius: var(--x-r-md);
+}
+
+.x-timer__display {
+  font-size: var(--x-fs-52);
+  font-weight: var(--x-w-body);
+  letter-spacing: var(--x-tr-display);
+  color: var(--x-ink);
+}
+
+.x-timer__controls {
+  display: flex;
+  gap: var(--x-s-snug);
+}
+
+/* `--x-surface` rather than `white`: white-on-hema was the only literal colour in this file, and the
+   token is the near-white the rest of the product uses. Measured 6.42:1 on --x-hema. */
+.x-timer__btn {
+  padding: var(--x-s-snug) var(--x-s-comfy);
+  font-size: var(--x-fs-13);
+  font-weight: var(--x-w-medium);
+  background: var(--x-hema);
+  color: var(--x-surface);
+  border: none;
+  border-radius: var(--x-r-pill);
+  cursor: pointer;
+  transition: background var(--x-t-fast) var(--x-ease);
+}
+
+.x-timer__btn:hover {
+  background: var(--x-hema-deep);
+}
+
+.x-timer__btn--secondary {
+  background: var(--x-panel-field);
+  color: var(--x-ink);
+  box-shadow: var(--x-flat);
+}
+
+.x-timer__btn--secondary:hover {
+  background: var(--x-panel-well);
+}
+
+.x-timer__complete {
+  font-size: var(--x-fs-13);
+  color: var(--x-positive);
+  margin: 0;
+}
+
+/* ── Study Battery ───────────────────────────────────────────────────────── */
+
+.x-battery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+  padding: var(--x-s-comfy);
+  background: var(--x-panel-well);
+  border-radius: var(--x-r-md);
+}
+
+.x-battery__gauge {
+  width: 100%;
+  height: 8px;
+  background: var(--x-line);
+  border-radius: var(--x-r-pill);
+  overflow: hidden;
+  position: relative;
+}
+
+.x-battery__fill {
+  height: 100%;
+  background: var(--x-hema);
+  border-radius: var(--x-r-pill);
+  transition: width var(--x-t-base) var(--x-ease);
+}
+
+.x-battery__label {
+  font-size: var(--x-fs-14);
+  font-weight: var(--x-w-strong);
+  color: var(--x-ink);
+}
+
+.x-battery__text {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink-2);
+  margin: 0;
+  line-height: var(--x-lh-body);
+}
+
+/* ── Library ─────────────────────────────────────────────────────────────── */
+
+.x-library {
+  padding: var(--x-s-comfy);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-wide);
+}
+
+.x-library__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-base);
+}
+
+.x-library__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.x-library__heading {
+  font-size: var(--x-fs-12);
+  font-weight: var(--x-w-medium);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+  margin: 0;
+}
+
+.x-library__add {
+  padding: var(--x-s-tight) var(--x-s-snug);
+  font-size: var(--x-fs-12);
+  font-weight: var(--x-w-medium);
+  background: var(--x-panel-well);
+  color: var(--x-ink);
+  border: none;
+  border-radius: var(--x-r-xs);
+  cursor: pointer;
+  transition: background var(--x-t-fast) var(--x-ease);
+}
+
+.x-library__add:hover {
+  background: var(--x-line);
+}
+
+.x-library__picker {
+  padding: var(--x-s-base);
+  background: var(--x-panel-well);
+  border-radius: var(--x-r-sm);
+}
+
+.x-library__select {
+  width: 100%;
+  padding: var(--x-s-snug);
+  font-size: var(--x-fs-13);
+  background: var(--x-panel-field);
+  color: var(--x-ink);
+  border: 1px solid var(--x-line);
+  border-radius: var(--x-r-xs);
+  cursor: pointer;
+}
+
+.x-library__empty {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink-2);
+  margin: 0;
+  padding: var(--x-s-base);
+  background: var(--x-panel-well);
+  border-radius: var(--x-r-sm);
+  line-height: var(--x-lh-body);
+}
+
+.x-library__entries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-base);
+}
+
+/* ── Library Entry ───────────────────────────────────────────────────────── */
+
+.x-lib-entry {
+  padding: var(--x-s-base);
+  background: var(--x-panel-well);
+  border-radius: var(--x-r-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+}
+
+.x-lib-entry__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--x-s-snug);
+}
+
+.x-lib-entry__title {
+  font-size: var(--x-fs-14);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink);
+  margin: 0;
+  line-height: var(--x-lh-ui);
+}
+
+.x-lib-entry__remove {
+  font-size: var(--x-fs-19);
+  line-height: 1;
+  color: var(--x-ink-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--x-r-xs);
+  transition: all var(--x-t-fast) var(--x-ease);
+}
+
+.x-lib-entry__remove:hover {
+  background: var(--x-line);
+  color: var(--x-ink);
+}
+
+.x-lib-entry__pearl {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink-2);
+  margin: 0;
+  line-height: var(--x-lh-body);
+}
+
+.x-lib-entry__notes {
+  width: 100%;
+  padding: var(--x-s-snug);
+  font-size: var(--x-fs-13);
+  line-height: var(--x-lh-body);
+  background: var(--x-panel-field);
+  color: var(--x-ink);
+  border: 1px solid var(--x-line);
+  border-radius: var(--x-r-xs);
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color var(--x-t-fast) var(--x-ease);
+}
+
+.x-lib-entry__notes:focus {
+  outline: none;
+  border-color: var(--x-hema);
+}
+
+.x-lib-entry__notes::placeholder {
+  color: var(--x-ink-3);
+}
+
+/* ── Settings ────────────────────────────────────────────────────────────── */
+
+.x-settings {
+  padding: var(--x-s-comfy);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-wide);
+}
+
+.x-settings__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-base);
+  padding-bottom: var(--x-s-base);
+  border-bottom: 1px solid var(--x-line);
+}
+
+.x-settings__section:last-child {
+  border-bottom: none;
+}
+
+.x-settings__heading {
+  font-size: var(--x-fs-12);
+  font-weight: var(--x-w-medium);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+  margin: 0;
+}
+
+.x-settings__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+}
+
+.x-settings__label {
+  font-size: var(--x-fs-13);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink);
+}
+
+.x-settings__note {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink-2);
+  margin: 0;
+  line-height: var(--x-lh-body);
+}
+
+.x-settings__radio-group {
+  display: flex;
+  gap: var(--x-s-base);
+}
+
+.x-settings__radio {
+  display: flex;
+  align-items: center;
+  gap: var(--x-s-snug);
+  font-size: var(--x-fs-13);
+  color: var(--x-ink);
+  cursor: pointer;
+}
+
+.x-settings__radio input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* ── Apple-style toggle ──────────────────────────────────────────────────── */
+
+.x-settings__toggles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-base);
+}
+
+.x-settings__toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--x-s-base);
+  padding: var(--x-s-snug) 0;
+}
+
+.x-settings__toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.x-settings__toggle-label {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink);
+}
+
+.x-settings__toggle-meta {
+  font-size: var(--x-fs-11);
+  color: var(--x-ink-3);
+}
+
+.x-toggle {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.x-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.x-toggle__track {
+  display: block;
+  width: 48px;
+  height: 28px;
+  background: var(--x-line-2);
+  border-radius: var(--x-r-pill);
+  position: relative;
+  transition: background var(--x-t-base) var(--x-ease);
+}
+
+/* The thumb is the one raised element in a groove, so it earns a contact shadow — built from --x-e1
+   (already ink-tinted, never neutral black) rather than a literal rgba. `--x-surface` rather than
+   `white`: nothing in this product is pure #fff. */
+.x-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  background: var(--x-panel-field);
+  border-radius: var(--x-r-pill);
+  box-shadow: var(--x-e1);
+  transition: transform var(--x-t-base) var(--x-ease);
+}
+
+.x-toggle input:checked + .x-toggle__track {
+  background: var(--x-hema);
+}
+
+.x-toggle input:checked + .x-toggle__track .x-toggle__thumb {
+  transform: translateX(20px);
+}
+
+.x-settings__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+}
+
+.x-settings__btn {
+  padding: var(--x-s-snug) var(--x-s-base);
+  font-size: var(--x-fs-13);
+  font-weight: var(--x-w-medium);
+  background: var(--x-panel-well);
+  color: var(--x-ink);
+  border: 1px solid var(--x-line);
+  border-radius: var(--x-r-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--x-t-fast) var(--x-ease);
+}
+
+.x-settings__btn:hover {
+  background: var(--x-line);
+}
+
+.x-settings__btn--danger {
+  color: var(--x-critical);
+  border-color: color-mix(in oklab, var(--x-critical) 30%, var(--x-line));
+}
+
+.x-settings__btn--danger:hover {
+  background: color-mix(in oklab, var(--x-critical) 8%, var(--x-surface));
+  border-color: var(--x-critical);
+}
+
+/* ── SimCatalog ──────────────────────────────────────────────────────────── */
+
+.x-sim-catalog {
+  padding: var(--x-s-comfy);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-wide);
+}
+
+.x-sim-catalog__intro {
+  font-size: var(--x-fs-14);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-body);
+  margin: 0;
+}
+
+.x-sim-catalog__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-comfy);
+}
+
+.x-sim-card {
+  padding: var(--x-s-comfy);
+  background: var(--x-panel-well);
+  border-radius: var(--x-r-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-base);
+  box-shadow: var(--x-flat);
+}
+
+.x-sim-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+}
+
+.x-sim-card__title {
+  font-size: var(--x-fs-16);
+  font-weight: var(--x-w-strong);
+  color: var(--x-ink);
+  margin: 0;
+}
+
+.x-sim-card__description {
+  font-size: var(--x-fs-13);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-body);
+  margin: 0;
+}
+
+.x-sim-card__footer {
+  padding-top: var(--x-s-snug);
+  border-top: 1px solid var(--x-line);
+}
+
+.x-sim-card__status {
+  font-size: var(--x-fs-12);
+  font-weight: var(--x-w-medium);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+}
+
+/* ── Custom scrollbars: hover-only hairlines ─────────────────────────────── */
+
+.x-activity::-webkit-scrollbar,
+.x-library::-webkit-scrollbar,
+.x-settings::-webkit-scrollbar,
+.x-sim-catalog::-webkit-scrollbar {
+  width: 8px;
+}
+
+.x-activity::-webkit-scrollbar-track,
+.x-library::-webkit-scrollbar-track,
+.x-settings::-webkit-scrollbar-track,
+.x-sim-catalog::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.x-activity::-webkit-scrollbar-thumb,
+.x-library::-webkit-scrollbar-thumb,
+.x-settings::-webkit-scrollbar-thumb,
+.x-sim-catalog::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: var(--x-r-pill);
+  transition: background var(--x-t-fast) var(--x-ease);
+}
+
+.x-activity:hover::-webkit-scrollbar-thumb,
+.x-library:hover::-webkit-scrollbar-thumb,
+.x-settings:hover::-webkit-scrollbar-thumb,
+.x-sim-catalog:hover::-webkit-scrollbar-thumb {
+  background: var(--x-line);
+}
+
+.x-activity::-webkit-scrollbar-thumb:hover,
+.x-library::-webkit-scrollbar-thumb:hover,
+.x-settings::-webkit-scrollbar-thumb:hover,
+.x-sim-catalog::-webkit-scrollbar-thumb:hover {
+  background: var(--x-line-2);
+}

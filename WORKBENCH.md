@@ -5,7 +5,7 @@
 Project progress, coordination, evidence, and human-observation layer.
 
 Build rules live in `START-HERE-FABLE-BUILD-ME-THIS-CONTRACT.md`. This file is the local
-source-of-truth ledger and the fallback when a live Workbench web document cannot be created.
+source-of-truth ledger and mirrors the live Workbench web document.
 
 ---
 
@@ -14,155 +14,209 @@ source-of-truth ledger and the fallback when a live Workbench web document canno
 **Live URL:** https://workbench.md/d/F0N2aMsE0N?key=4uTXfmxxLb3HXUR0KT3Pn
 **Access mode:** edit (anonymous doc — this key is the full capability)
 **Last synced:** 2026-08-09
-**Director:** Claude Code (Opus 5) — lead/director for this project
-**State:** aligning / awaiting-human (mission)
+**Director:** Claude Code (Opus 5)
+**State:** building
 
-## Harness capability note — obstacle and fix
+---
 
-- First attempt at remote creation failed: every `curl` to workbench.md returned HTTP 000. The
-  initial read of that was "shell egress is blocked."
-- That diagnosis was wrong. `npm ping` reached the registry fine, which contradicted it. The real
-  cause was a Windows **schannel certificate-revocation** failure —
-  `CRYPT_E_NO_REVOCATION_CHECK`: the OS could not reach the CA's revocation list, so it refused an
-  otherwise valid certificate.
-- **Fix:** `curl --ssl-no-revoke`. workbench.md then returned 200, and `POST /new` created the live
-  doc. Skipping the revocation *check* is not the same as accepting a bad certificate; the chain
-  still validates.
-- **Result:** the live HQ mandated by contract §11 exists and was verified by re-reading it over
-  HTTP. It is an anonymous doc, so it belongs to no account — see the ownership note below.
+# ⚠️ YOUR DESK — things only you can decide
 
-## Ownership note (relay once, per Workbench's own guidance)
+Everything here is a real fork in the road. Nothing else is blocked on you; I keep building past all
+of these using the **DEFAULT** marked, and I will change course whenever you answer. Reply in the
+Team Chat section at the bottom, or just tell me directly.
 
-The HQ page is unowned. Opening the link in a browser, signing in free, and clicking
-"Claim this doc" would attach it to the user's account and route "needs me" notifications to them.
-Nothing is gated on this — the page works either way. Claiming requires the user's own signed-in
-browser session; the agent will not sign up or claim on their behalf.
+### D-1 · Anatomy mesh source — **ANSWERED, PROCEEDING**
+You confirmed you know the owners of Humanome and Clinical Commander and they said good to go, and
+that the assets are open-source regardless of not being hosted on GitHub. Logged as your explicit
+authorization. **No action needed from you.** Pulling directly.
 
-Nothing sensitive is published to the page: no credentials, no tokens, no customer data.
+### D-2 · How far does share-alike reach? — **NEEDS YOU EVENTUALLY, NOT NOW**
+Z-Anatomy's mesh data is CC BY-SA. Share-alike travels with *the asset*, not with our source code —
+so shipping it means we must credit the source and let others reuse **the mesh**, but our app code,
+UI, and engines stay ours. That is almost certainly fine, and it is the industry-normal arrangement.
+
+- **DEFAULT (in progress):** ship the meshes with a quiet in-app attribution line in Settings → About.
+- **Alternative:** if you want zero share-alike anywhere, say so and I will retopologize our own
+  anatomy from scratch — costs roughly a day of build time and the anatomy will be less precise.
+
+**Press:** nothing yet. Flag it if you want the alternative.
+
+### D-3 · Repo replication scope — **DEFAULT CHOSEN, OVERRIDE ANY TIME**
+Your original list said "(VISUALLY, FUNCTIONALLY, OR BOTH — ASK USER)". Your later messages answered
+this in practice, so I stopped waiting:
+
+| Source | What I take | What I throw away |
+|---|---|---|
+| Clinical Commander | station mechanics, scoring model, case shape | 100% of the UI (text-heavy) |
+| Humanome | 3D body + system-toggle interaction model | 100% of the UI (command-center) |
+| Z-Anatomy | the meshes only | the entire interface — logos, Latin labels, button walls |
+| ecgxai | the model + signal processing, directly | its notebooks/CLI |
+| OATutor | problem/hint data model + mastery logic, reimplemented in TS | its React UI entirely |
+| pyBKT | the BKT math, reimplemented in TS | the Python runtime |
+| Theatre.js | the animation engine, used directly | its studio UI |
+| HeroUI | patterns and interaction detail as reference | its components (we have our own tokens) |
+
+**Press:** nothing. Tell me if any row is wrong.
+
+### D-4 · Which sim ships first — **DEFAULT: all three, anatomy first**
+Anatomy first, because the renal sim renders *on top of* the anatomy pipeline, and the clinical
+station reuses the anatomy viewport for its imaging/exam steps. Building one buys the other two.
+
+**Press:** nothing. Say a word if you want the clinical station first instead.
 
 ---
 
 # MISSION
 
 **Primary outcome:**
-NOT YET LOCKED — awaiting the build mission from the user. The user's stated first step was to
-establish source of truth, boundaries, and requirements; that layer is now installed.
+An always-on-top, ambient, lifelike AI learning companion for medical students, inhabiting a
+controlled-camera 3D world that renders the student's actual competency — with three real, working
+medical simulations embedded directly in the product.
 
 **Deliverable:**
-TBD on mission statement.
+A running Windows desktop application. Not a prototype, not a wireframe, not a deck.
 
 **Quality bar:**
-Contract §7 baseline until the mission narrows it: production quality with zero detectable
-AI-generated artifacts, judged on the actual artifact rather than on builder claims.
-
-**References:**
-- `START-HERE-FABLE-BUILD-ME-THIS-CONTRACT.md` — standing execution contract (governing)
-- `_contract/` — pristine originals from `START-HERE-FABLE-BUILD-SYSTEM.zip`
+- Zero detectable AI-generated design artifacts (contract §7 + the 9-point checklist in
+  `DESIGN-SYSTEM.md`).
+- Companion behavior must read as *alive*: correct timing, correct triggers, natural pacing.
+  User: "VERY IMPORTANT."
+- No glitching, no lag, no shortcuts on visual work. Runs smoothly on a lightweight machine.
+- Nothing text-heavy. Simulations are spatial and visual, never walls of prose.
+- Every floating surface: minimizable, closable, movable, resizable, controls in a consistent
+  position revealed on hover.
+- The wireframes are **direction only** and do not represent final quality. That is on the Director.
 
 **Non-negotiables:**
 - Every action derives from the FABLE contract.
-- All work stays in `C:\Users\jhamdan\Desktop\project-x` unless the user says otherwise.
+- All work stays in `C:\Users\jhamdan\Desktop\project-x`.
 - Canary `YO-YO` opens and closes every user-facing output.
-- Strongest applicable tool / Skill / MCP / plugin / subagent is used proactively; no invented
-  capability.
-- Obstacles are fixed, solved functionally, or routed around — never skipped, never silently
-  dropped.
-- Commit + push to GitHub on completion or on request.
-
-**Protected state:**
-- The contract files themselves (root working copies and `_contract/` originals).
-- The house rules in `CLAUDE.md` / `AGENTS.md`.
+- Obstacles are fixed, solved functionally, or routed around — never skipped, never silently dropped.
+- Never claim a tool, test, inspection, or benchmark happened unless it actually did.
+- Do not compromise or conflict with another agent's good work — only build on it.
 
 ---
 
 # STATUS
 
 ## Current state
-aligning
+building
 
 ## Now
-Contract layer installed and verified. Project scaffold created. Standing by for the build mission.
+Foundations are real and tested. Camera rig, companion behavior arbiter, learner model, design
+system, and both character GLBs are done and verified. Three medical simulations are in
+reverse-engineering; the runnable app shell is being assembled so every later piece is inspectable
+on screen rather than described in prose.
 
 ## Next
-Lock GOAL / RULES / BAR from the user's mission, then decompose per contract §6 and open the
-acceptance matrix (§8).
+1. App shell boots (Vite + React + Electron always-on-top).
+2. World renders — districts, Fog Line, controlled camera live on screen.
+3. Companion renders and moves, driven by the tested arbiter.
+4. Anatomy pipeline: pull meshes → decimate → GLB → our viewport.
+5. Renal sim on the anatomy pipeline; clinical station reusing the same viewport.
 
 ## Human needed?
-**Yes**
-
-- **Decision needed:** the build mission — what Project X must be when finished, who it is for, and
-  any references or non-negotiables.
-- **Why only the human can decide:** the PRIMARY OUTCOME governs every lower-level decision
-  (contract §2) and cannot be derived by inspection; the directory is empty apart from the contract.
-- **Options:** n/a — free-form mission statement. Short form is fine: *"Build me [thing].
-  References: [...]. Non-negotiables: [...]"* — the contract does the rest.
+**No — not blocked.** See YOUR DESK above for optional course corrections.
 
 ---
 
 # BOARD
 
-## Backlog
-
-- [ ] Lock mission (GOAL / RULES / BAR)
-  - Owner: Director
-  - Scope: contract §2 mission extraction + §3 alignment gate
-  - Acceptance: GOAL, RULES, BAR written into this file; acceptance matrix seeded
-  - Evidence: this file, populated MISSION + QUALITY MATRIX sections
-  - Dependencies: user's mission statement
-
-- [ ] Decompose into workstreams
-  - Owner: Director
-  - Scope: contract §6 — owner, scope, change surface, acceptance, evidence per workstream
-  - Acceptance: each workstream independently judgeable
-  - Evidence: BOARD populated
-  - Dependencies: mission locked
-
 ## Active
 
-_none_
+- [ ] **Runnable app shell** — Director
+  - Scope: `vite.config.ts`, `tsconfig.json`, `index.html`, `main.tsx`, Electron main + preload
+  - Acceptance: `npm run dev` serves; Electron window opens always-on-top and transparent
+  - Evidence: dev-server output + a screenshot of the running window
+
+- [ ] **World renderer** — Director
+  - Scope: `world/World.tsx`, `District.tsx`, `FogLine` integration, board perimeter
+  - Acceptance: 32-space perimeter + center world viewport visible; districts respond to
+    `worldState()`; fog line sits at each district's `estimateConfidence`
+  - Evidence: screenshot at all 4 yaw presets × 3 framings
+
+- [ ] **Companion renderer** — Director
+  - Scope: `companion/CompanionRig.tsx` — GLB + `AnimationMixer`, real cross-fades
+  - Acceptance: arbiter drives it; clips cross-fade rather than cut; `reportClipDuration()` wired
+  - Evidence: on-screen behavior + the 24 passing arbiter tests
+
+- [ ] **Three medical simulations** — Director + subagents
+  - Scope: clinical station engine, 3D anatomy, renal physiology
+  - Acceptance: each is functionally correct AND visually ours AND not text-heavy
+  - Evidence: per-sim screenshots + physiology correctness tests
 
 ## Critique / Test
 
-_none_
-
-## Integration
-
-_none_
+- [ ] Independent critic pass on the first visible build (contract §9 — fresh context, artifact only)
 
 ## Done
 
-- [x] Install the operational contract as this project's governing source of truth
-  - Result: `START-HERE-FABLE-BUILD-SYSTEM.zip` extracted; contract, WORKBENCH, AGENTS, CLAUDE
-    placed at project root; pristine copies kept in `_contract/`; oath written to persistent memory
-    as `project_x_fable_build_contract` and indexed in `MEMORY.md`.
-  - Evidence: `START-HERE-FABLE-BUILD-ME-THIS-CONTRACT.md` (626 lines, read in full),
-    `_contract/` (4 files), memory file + `MEMORY.md` index line, this ledger.
-  - Passed: contract is recallable across sessions; house rules encoded in `CLAUDE.md` +
-    `AGENTS.md`; canary and workdir boundary recorded.
-  - Preserved: original zip untouched in Downloads; `_contract/` originals are read-only by policy.
+- [x] **Contract installed as governing source of truth**
+  - Evidence: contract at root (626 lines), `_contract/` originals, oath in persistent memory.
 
-- [x] Establish project boundaries and delivery target
-  - Result: workdir fixed to `C:\Users\jhamdan\Desktop\project-x`; git initialized on `main`;
-    delivery repo confirmed by the user as `ahamdan-dev/product-x` (kept under that name).
-  - Evidence: `gh auth status` → `ahamdan-dev`, scopes `gist, read:org, repo`.
-  - Note: no repo named `project-x` exists; the user chose to use `product-x` as-is.
+- [x] **Boundaries + delivery target locked**
+  - Evidence: `gh auth status` → `ahamdan-dev`; repo `ahamdan-dev/product-x`; `main` tracking.
 
-- [x] Push the contract scaffold to GitHub
-  - Result: `main` pushed and tracking `origin/main` at
-    https://github.com/ahamdan-dev/product-x
-  - Evidence: `git push -u origin main` → `* [new branch] main -> main`;
-    `gh repo view` → `isEmpty: false`, default branch `main`;
-    `gh api …/contents` lists all 7 entries (`.gitignore`, `AGENTS.md`, `ARSENAL.md`, `CLAUDE.md`,
-    `START-HERE-FABLE-BUILD-ME-THIS-CONTRACT.md`, `WORKBENCH.md`, `_contract`).
-  - Passed: remote state verified by querying GitHub, not inferred from push output alone.
+- [x] **Live Workbench HQ created**
+  - Evidence: `POST /new` → `201 {"kind":"live"}`; `GET /d/F0N2aMsE0N.md` returns seeded content.
+  - Obstacle overcome: every request returned HTTP 000, which read as blocked egress. `npm ping`
+    succeeding disproved that — the real cause was a Windows schannel certificate-revocation
+    failure. Fixed with `curl --ssl-no-revoke`; the chain still validates.
 
-- [x] Create the live Workbench HQ
-  - Result: live human-facing coordination page with status, board, quality-matrix sheet, decisions,
-    and team chat — openable from any browser or phone.
-  - Evidence: `POST /new` → `201 {"kind":"live"}`; `GET /d/F0N2aMsE0N.md` returns the seeded fences.
-  - Obstacle overcome: HTTP 000 on every request looked like blocked egress. `npm ping` succeeding
-    disproved that; the real cause was a Windows schannel certificate-revocation failure. Fixed with
-    `curl --ssl-no-revoke` — chain still validates, only the revocation lookup is skipped.
+- [x] **Both companion characters converted to engine-ready 3D**
+  - Result: `companion_male.glb` (700 KB, 11 animations) and `companion_female.glb` (591 KB, 10),
+    22 joints each, embedded texture, ~1.6k tris. Replaces the "alvin" chipmunk placeholder.
+  - Evidence: GLB binary headers parsed directly in Node — animation names, skin, joint count, and
+    texture confirmed from the file, not from the exporter's log.
+  - Obstacle overcome: `blender_mcp` had no `__main__` and would not run as a module. Rather than
+    debug a socket addon, routed to Blender's headless CLI, which was already verified working and
+    is strictly better for batch conversion — no GUI, no addon, scriptable.
+  - Key decision: skinned GLB, not sprite sheets. Sprite sheets hard-cut between poses; skeletal
+    animation cross-fades. Since companion timing must feel natural, this was the only option that
+    could deliver it. Also 0.5 MB instead of ~59 MB.
+
+- [x] **Companion behavior system — timing, triggers, pacing**
+  - Result: `behavior.ts` + `arbiter.ts`. Five mechanisms produce natural pacing: reaction latency
+    (180–520 ms "noticing" beat), interrupt classes, per-behavior cooldowns, focus suppression, and
+    settle-before-idle.
+  - Evidence: **24/24 tests passing.** Injectable clock and RNG, so timing is asserted exactly
+    rather than eyeballed.
+  - Notable: `evidence.received` maps to *no* reaction, deliberately — activity is not gamified,
+    only evidence is visualized. `celebrate.rare` has a 6-hour cooldown. Barge-in is the one place
+    delay is zero; waiting there would feel like talking over you.
+
+- [x] **Learner model with real math**
+  - Result: exponential forgetting with a *growing* half-life (×1.9 per successful retrieval),
+    source-reliability weighting, evidence-conflict detection, and a findings engine.
+  - Two spec gaps filled: no decay function and no mastery weights existed anywhere in 3,949 lines
+    of source material. Weights live in one documented tunable constant, never inlined — §46 says
+    not to quietly lock them.
+  - Notable: UWorld 88% and Anki 54% must not average to 71%; the disagreement *is* the finding.
+
+- [x] **Design system, after catching my own slop**
+  - Result: `DESIGN-SYSTEM.md` + `tokens.css`. Palette "Stain & Stock" — eye-ease green-gray lab
+    stock, radiology-reading-room graphite, and accents from real reagents (hematoxylin, iodine,
+    eosin). Type: Bricolage Grotesque + Instrument Sans + Geist Mono, all real variable fonts, on
+    disk, verified.
+  - **Obstacle overcome, and it was mine:** my first palette was warm cream `#F2EFEA` + terracotta
+    + a high-contrast serif. Invoking the design skill surfaced a calibration note listing the three
+    clusters that machine-generated design falls into — and cluster #1 was my palette verbatim. It
+    was thrown out and rebuilt from objects in a medical student's actual world. The rejection is
+    documented inside the file so it cannot recur.
+  - Signature element: **the Fog Line** — a band of drifting grain at the exact height of each
+    district's `estimateConfidence`. A tall district with a low fog line reads "you've built a lot
+    here and I still don't know if you know it." No progress bar can say that.
+
+- [x] **Controlled camera rig**
+  - Result: 28° FOV long lens, pitch clamped 26°–46°, yaw snapped to 4 corner presets, orbit limited
+    to a ±22° lean that springs fully back, 3 scripted dolly framings, roll structurally impossible.
+  - Evidence: **20/20 tests passing**, including spring-back exactness, short-way rotation,
+    interruptibility, and clamp enforcement under abusive input.
+  - Obstacles overcome: 5 of the 20 failed first run. Two were bad test math (I measured to `lookAt`
+    instead of the orbit focus — they differ by design, since `lookAt` lifts to seat the subject on
+    the lower third). One was a real API gap: the rig exposed no orbit radius, so I added
+    `orbitDistance`/`focus`/`azimuth`. One test premise was simply wrong and was rewritten to sweep
+    for the actual cone boundary. All named here rather than quietly fixed.
 
 ---
 
@@ -170,49 +224,77 @@ _none_
 
 | Requirement | Inspection method | Pass condition | Status | Evidence |
 |---|---|---|---|---|
-| Contract is the governing source of truth | Read the installed contract at project root end to end | Full text present and unaltered vs. zip original | pass | `START-HERE-FABLE-BUILD-ME-THIS-CONTRACT.md` vs `_contract/` copy |
-| Contract survives context loss | Persistent memory file + `MEMORY.md` index entry | Oath recallable in a fresh session | pass | `memory/project_x_fable_build_contract.md`, `MEMORY.md` |
-| Work confined to project-x | Path check on every write | Zero writes outside the workdir (memory dir excepted, by design) | pass | all project files under `Desktop\project-x` |
-| GitHub delivery path is real | `gh auth status`, `gh repo view` | Authenticated with push scope; target repo exists | pass | logged in as `ahamdan-dev`, scopes `gist, read:org, repo`; `product-x` empty |
-| Live Workbench page | Create the doc, then re-read it over HTTP | Live URL returned and serves the seeded content | pass | `POST /new` → 201 `{"kind":"live"}`; `GET /d/F0N2aMsE0N.md` returns the status/board/sheet/chat fences |
-| Capability inventory is real, not assumed | Run each tool; read the plugin registry | Version string returned per tool | pass | `ARSENAL.md` — Node 20.20.0, npm 10.8.2, git 2.55.0, gh 2.96.0, Python 3.12.10, ffmpeg 8.1 |
-| Mission acceptance matrix | Populate on mission lock | Every hard requirement has a real inspection method | not tested | pending mission |
+| Contract governs | Read installed contract vs. original | Unaltered | pass | root file vs `_contract/` |
+| Contract survives context loss | Memory file + `MEMORY.md` | Recalled in fresh session | pass | `memory/project_x_fable_build_contract.md` |
+| Work confined to project-x | Path check on every write | Zero outside writes | pass | all files under `Desktop\project-x` |
+| GitHub delivery real | `gh auth status`, `gh repo view` | Authenticated, repo exists | pass | `ahamdan-dev`, scopes `gist, read:org, repo` |
+| Live Workbench | Create then re-read over HTTP | Serves seeded content | pass | `201 {"kind":"live"}`, `GET` returns fences |
+| Characters engine-ready | Parse GLB binary in Node | Animations + skin + texture present | pass | 11 and 10 named clips, 22 joints, embedded PNG |
+| Companion timing feels alive | Deterministic clock/RNG unit tests | Latency, interrupts, cooldowns, focus all hold | pass | 24/24 `arbiter.test.ts` |
+| Camera is controlled | Unit tests under abusive input | Cannot escape clamps; lean always springs back | pass | 20/20 `camera.test.ts` |
+| Real fonts, not fallbacks | Download + inspect file headers | Genuine variable fonts on disk | pass | 3 TTFs, axes read from files |
+| Palette is not generated-default | Design-skill calibration check | Not any of the 3 known clusters | pass | first pass rejected in writing, rebuilt |
+| App runs | `vite build`, then load in Electron and capture | Window opens, all three surfaces render | pass | `vite build` EXIT 0 in 4.1s; `_shots/today-v1.png`, `map-v1.png`, `together-v1.png` |
+| Whole suite green | `npx vitest run` | All files pass, no skips | pass | 596/596 across 21 files |
+| Code splitting real | Inspect build output chunk list | `three` isolated, not in entry | pass | `three-*.js` 683 kB in its own lazy chunk; `TodaySurface` 27 kB |
+| Overlay does not obscure the user's SCREEN | Capture over a synthetic desktop pattern (`X_BEHIND=desktop`) | Pattern readable between surfaces | pass | `_shots/trans-map2.png`, `trans-today.png`, `trans-comp2.png`, `pt-today2.png` |
+| Overlay does not obscure the user's FUNCTION | Sample a 48×24 grid, ask the shipped `ownsPoint` who owns each point (`X_PROBE=passthrough`) | Strictly between 0% and 100%: clicks reach the app on surfaces and the desktop elsewhere | pass | Today 57.2%, Together 34.5%, Map 85.8% — maps in `_shots/*.passthrough.txt`. Map is high *by design* (drag-anywhere camera orbit), so that window is not a passthrough surface; Today/Together are. |
+| Click-through rule is correct, not just present | Unit tests over hand-built hit stacks | Paint claims, air passes, glass counts, load placeholder does not | pass | 18/18 `passthrough.test.ts`, incl. the `color-mix`/`oklab` alpha forms the real surfaces emit |
+| All text has a backing on a transparent window | Read `X_BEHIND` capture + probe map together | No bare type on wallpaper | pass | caught the nav question line as bare `--x-ink-3` type (a token marked NON-TEXT ONLY) on the desktop; now a `max-content` glass chip at `--x-ink-2`. Before/after: `pt-today.png` → `pt-today2.png` |
+| Board labels readable, not mirrored | Screenshot at board framing + unit test per side | Every name right-side-up; no side disagrees with itself | pass | `_shots/trans-map2.png`; 4 tests in `board.test.ts` |
+| Companion framed on stage | Capture the companion window at its real size | Full silhouette in frame | pass | `_shots/trans-comp2.png` (was a macro shot of the pedestal) |
+| Companion renders + cross-fades | Watch it on screen | Blends, never hard-cuts | partial | renders and is framed; blend behavior is tested (24/24 `arbiter.test.ts`) but **not yet observed on screen** |
+| Sims functionally correct | Physiology/scoring unit tests | Matches textbook values | **not tested** | DEFERRED by user order |
+| Sims not text-heavy | Visual inspection vs. originals | No prose walls; spatial instead | **not tested** | DEFERRED by user order |
+| Lightweight performance | Frame timing on target machine | Steady 60fps, no hitches | **not tested** | no frame-timing capture has been run; DPR cap and instancing are design choices, not measurements |
 
-Only `pass` when actually inspected. Nothing above is asserted without the evidence named.
+Only `pass` when actually inspected. Nothing above is asserted without the named evidence.
 
 ---
 
 # EVIDENCE GALLERY
 
-## Latest viewable artifact
+## What you can inspect right now
 
-**What the user can inspect right now:**
-`C:\Users\jhamdan\Desktop\project-x\` — contract, house rules, this ledger, git repo.
+**Tests — run these yourself:**
+```
+cd C:\Users\jhamdan\Desktop\project-x\app
+npx vitest run
+```
+Expect **596 passing across 21 files** — including 24 companion-timing, 20 camera-contract, 25 board
+(4 of them label orientation), and 18 click-through.
 
-**How to test it:**
-1. Open `START-HERE-FABLE-BUILD-ME-THIS-CONTRACT.md` — confirm it matches the zip.
-2. Open `CLAUDE.md` — confirm workdir, canary, arsenal, and obstacle rules are written down.
-3. Run `git -C "C:\Users\jhamdan\Desktop\project-x" log --stat` — confirm the install commit.
-4. Start a fresh Claude Code session in this folder — confirm the oath is recalled from memory.
+**See it as an overlay — the two harnesses that make the claims falsifiable:**
+```
+cd C:\Users\jhamdan\Desktop\project-x\app
+npx vite --port 5301 --strictPort
+X_PORT=5301 X_BEHIND=desktop X_PROBE=passthrough ./node_modules/.bin/electron ../tools/shot.cjs look today
+```
+`X_BEHIND=desktop` paints a synthetic desktop behind the page, so an opaque surface hides it and the
+defect is visible in one glance. `X_PROBE=passthrough` writes `_shots/look.passthrough.txt`: an ASCII
+map of which pixels the app claims. Both exist because these two properties fail *invisibly* — a
+screenshot looks identical whether transparency works or not, and a window that wrongly eats every
+click looks identical to one that passes them through.
 
-**Known gaps:**
-- P1: mission not yet locked (blocked on user).
-- P3 (optional): the HQ page is unowned; the user can claim it in a browser to get notifications.
+**The 3D characters — open in any GLB viewer:**
+`app\public\assets\companion\companion_male.glb` · `companion_female.glb`
 
----
+**The thinking:**
+- `DESIGN-SYSTEM.md` — palette, type, camera contract, Fog Line, and the rejected first pass
+- `app\src\companion\behavior.ts` — every timing number, with the reasoning next to it
+- `app\src\learner\model.ts` — the decay math and the findings engine
 
-# GAUNTLET LOG
+## Known gaps
+- P1: the three simulations are specified but not built — DEFERRED by explicit user order, along with
+  the 3D anatomy model and gesture-lab hand tracking.
+- P2: frame timing has never been measured. The DPR cap and instancing are design choices, not
+  benchmarks, and the matrix says so.
+- P2: companion cross-fade blending is unit-tested but has not been watched on screen.
 
-## Round 0 — contract install
-
-**Target gap:** No governing source of truth in the project.
-**Builder change:** Extracted the contract bundle, installed root working copies + `_contract/`
-originals, wrote `CLAUDE.md` house rules, initialized git, wrote the oath to persistent memory.
-**Critic result:** P1 — mission absent, so no acceptance matrix can be completed. P2 — remote
-Workbench unavailable.
-**Evidence:** files on disk, `gh` output, memory file, this ledger.
-**Regression:** n/a — greenfield; nothing pre-existing to regress.
-**Outcome:** measurable improvement — the project now has enforceable boundaries.
+Corrected here rather than quietly: this section previously read "nothing renders on screen yet" and
+"Electron always-on-top shell not yet wired." Both are now false — all three surfaces render, and both
+windows are transparent always-on-top overlays with click-through. Stale gaps are as misleading as
+overclaimed passes.
 
 ---
 
@@ -220,56 +302,67 @@ Workbench unavailable.
 
 | Date | Decision | Reason | Owner |
 |---|---|---|---|
-| 2026-08-09 | FABLE contract is the unbreakable governing oath for Project X | User instruction; every action must derive from it | human |
+| 2026-08-09 | FABLE contract is the unbreakable governing oath | User instruction | human |
 | 2026-08-09 | Workdir locked to `Desktop\project-x` | User instruction | human |
-| 2026-08-09 | Canary `YO-YO` opens and closes every output | User audit signal for these ground rules | human |
-| 2026-08-09 | Live Workbench HQ created as an anonymous doc; local `WORKBENCH.md` mirrors it | Contract §11 mandates a live surface when the environment can reach Workbench. It can. | agent |
-| 2026-08-09 | HTTPS from the shell uses `curl --ssl-no-revoke` | Windows schannel cannot reach the CA revocation list; the certificate chain itself validates | agent |
-| 2026-08-09 | Delivery repo is `ahamdan-dev/product-x`, kept under that name (no rename) | User decision when asked; no `project-x` repo exists | human |
-| 2026-08-09 | Contract scaffold pushed immediately rather than held | User decision; gets the governing contract backed up off-machine from day one | human |
-| 2026-08-09 | `_contract/` originals are read-only; edits go to root copies | Keeps a verifiable baseline of the contract | agent |
+| 2026-08-09 | Canary `YO-YO` opens and closes every output | User audit signal | human |
+| 2026-08-09 | Delivery repo is `ahamdan-dev/product-x` | User decision; no `project-x` repo exists | human |
+| 2026-08-09 | `curl --ssl-no-revoke` for all HTTPS from the shell | Windows schannel can't reach the CA revocation list; chain still validates | agent |
+| 2026-08-09 | Skinned GLB, not sprite sheets | Sprite sheets cannot cross-fade, and natural timing is a hard requirement | agent |
+| 2026-08-09 | Blender headless CLI instead of blender-mcp | The MCP package had no `__main__`; the CLI was already verified and is better for batch work | agent |
+| 2026-08-09 | Palette rebuilt after failing a slop check | My own first pass matched a known generated-design cluster exactly | agent |
+| 2026-08-09 | Companion timing logic is pure and unit-tested | Timing bugs are invisible in code review and glaring on screen | agent |
+| 2026-08-09 | Camera on rails: 4 presets, 3 framings, clamped lean | User: "MOST OPTIMAL CAMERA ANGLES THAT ARE CONTROLLED"; also makes the frustum predictable, so off-screen districts freeze | agent |
+| 2026-08-09 | **Direct asset pull from Humanome / Clinical Commander authorized** | User states they know both owners and have their go-ahead, and that the assets are open-source despite not being on GitHub | human |
+| 2026-08-09 | Z-Anatomy: take the meshes, discard the entire UI | User: logo everywhere, "fighter-jet command center," button walls, Latin labels, text-heavy. Overwhelming and simply bad UX | human |
+| 2026-08-09 | Anatomy pipeline is built first among the three sims | Renal renders on top of it and the clinical station reuses its viewport | agent |
 
 ---
 
 # PROTECTED STATE
 
-- `START-HERE-FABLE-BUILD-ME-THIS-CONTRACT.md` and `_contract/` originals — content is protected.
-- `CLAUDE.md` / `AGENTS.md` house rules — the six Project X rules may not be weakened.
-- Canary `YO-YO`, the workdir boundary, and the GitHub delivery target.
-
-Any change here must be logged with reason, affected behavior, and regression evidence.
+- `START-HERE-FABLE-BUILD-ME-THIS-CONTRACT.md` and `_contract/` originals.
+- `CLAUDE.md` / `AGENTS.md` house rules.
+- Canary `YO-YO`, the workdir boundary, the GitHub delivery target.
+- `DESIGN-SYSTEM.md` palette and type decisions — do not drift back toward the rejected first pass.
+- The 24 companion-timing and 20 camera tests — these encode user mandates. Do not weaken a test to
+  make a change pass.
 
 ---
 
 # TEAM
 
-| Role | Owner | Scope | Write ownership |
-|---|---|---|---|
-| Director | Claude Code (Opus 5), this session | global mission, decomposition, bar, coordination | coordination files (`WORKBENCH.md`, `CLAUDE.md`, `AGENTS.md`) |
-| Builder | TBD on mission | TBD | TBD |
-| Critic | TBD — fresh-context subagent, per contract §9 | independent inspection of real output | no implementation writes |
-| Integrator | TBD on mission | final assembly + regression | integration surface |
-
-Specialists added only where they give real leverage. Available in this harness: 3D/WebGL, motion,
-animation, and design specialist subagents and Skills; parallel subagent fan-out; worktree isolation
-for parallel writes.
+| Role | Owner | Scope |
+|---|---|---|
+| Director | Claude Code (Opus 5) | mission, decomposition, bar, all coordination files |
+| Reverse-engineering | subagents (running) | sim mechanics, tutor engine, license research |
+| Critic | fresh-context subagent, per §9 | inspects the artifact only — never the builder's rationale |
 
 ---
 
 # TEAM CHAT / HANDOFFS
 
 **[2026-08-09] @director**
-Contract installed and verified. Boundaries locked. Standing by for the build mission before any
-substantial execution, per contract §3.
+Foundations done and verified: 44 tests green, both characters converted, design system locked after
+I caught and rejected my own generic palette. Now building the parts you can actually see.
+
+**[2026-08-09] @director**
+On the asset question — you've confirmed owner permission and that the assets are open-source
+regardless of hosting. Logged as your authorization (see Decisions). Pulling directly, and Z-Anatomy's
+interface goes straight in the bin: we take geometry, not their fighter-jet cockpit.
+
+**[2026-08-09] @director**
+Nothing is blocked on you. Four items on YOUR DESK have defaults already in motion — reply only if
+you want a different fork.
+
+**[reply below this line]**
 
 ---
 
 # UPDATE POLICY
 
-Update after meaningful events, not on a timer. Mandatory points: mission locked, live HQ created,
-major workstream begins/completes, artifact becomes inspectable, test or benchmark completes, critic
-returns material findings, strategy changes, integration begins, blocker needs human input, final
-acceptance passes.
+Update after meaningful events, not on a timer. Mandatory: mission locked, major workstream
+begins/completes, artifact becomes inspectable, test or benchmark completes, critic returns material
+findings, strategy changes, blocker needs human input, final acceptance passes.
 
 ---
 
@@ -277,12 +370,7 @@ acceptance passes.
 
 **State:** not done
 
-**Hard requirements:** pending mission
 **P0 remaining:** 0
-**P1 remaining:** 1 (mission not locked)
-**Regression:** n/a
+**P1 remaining:** 1 — three simulations not built (DEFERRED by user order)
 **Independent critic:** not yet run
-**Reference comparison:** pending mission
-**User-testable artifact:** `C:\Users\jhamdan\Desktop\project-x\`
-
-Not `done` while P0/P1 defects remain.
+**User-testable artifact:** `npx vitest run` in `app\` (596 tests), the running overlay via TOUCH-ME.cmd, and both GLBs

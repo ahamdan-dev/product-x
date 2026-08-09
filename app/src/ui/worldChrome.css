@@ -1,0 +1,132 @@
+/* ============================================================================
+   World chrome — the camera control bar. One consistent place, revealed on hover.
+   ========================================================================= */
+
+.x-chrome {
+  position: fixed;
+  left: 50%;
+  bottom: var(--x-s-loose);
+  transform: translateX(-50%);
+  z-index: var(--x-z-chrome);
+
+  display: flex;
+  align-items: center;
+  gap: var(--x-s-snug);
+  padding: var(--x-s-snug);
+
+  border-radius: var(--x-r-pill);
+  border: 1px solid var(--x-line);
+  background: var(--x-glass-bg);
+  backdrop-filter: var(--x-glass-blur);
+  -webkit-backdrop-filter: var(--x-glass-blur);
+  box-shadow: var(--x-e2), var(--x-glass-hi);
+
+  /* At rest the bar recedes rather than disappearing. Fully hidden chrome means a first-time user
+     has no idea the controls exist; 0.42 is present enough to find, quiet enough to ignore. */
+  opacity: 0.42;
+  transition:
+    opacity var(--x-t-base) var(--x-ease-soft),
+    transform var(--x-t-base) var(--x-ease);
+}
+
+.x-chrome:hover,
+.x-chrome:focus-within {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.x-chrome__group {
+  display: flex;
+  align-items: center;
+  gap: var(--x-s-hair);
+}
+
+.x-chrome__rule {
+  width: 1px;
+  align-self: stretch;
+  margin: 3px var(--x-s-tight);
+  background: var(--x-line);
+}
+
+/* ── Chip: the one button style in the world view ─────────────────────────── */
+
+.x-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--x-s-tight);
+  height: 30px;
+  padding: 0 var(--x-s-base);
+
+  font-family: var(--x-font-ui);
+  font-size: var(--x-fs-13);
+  font-weight: 500;
+  letter-spacing: -0.004em;
+  color: var(--x-ink-2);
+
+  border: 1px solid transparent;
+  border-radius: var(--x-r-pill);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+
+  transition:
+    background var(--x-t-fast) var(--x-ease-soft),
+    color var(--x-t-fast) var(--x-ease-soft),
+    border-color var(--x-t-fast) var(--x-ease-soft);
+}
+
+.x-chip:hover {
+  background: var(--x-surface-2);
+  color: var(--x-ink);
+}
+
+.x-chip:active {
+  /* A half-pixel press. Enough to feel, not enough to see as a jump. */
+  transform: translateY(0.5px);
+}
+
+.x-chip:focus-visible {
+  outline: 2px solid var(--x-hema);
+  outline-offset: 2px;
+}
+
+/* Active state is a wash, not a fill. A solid primary-colored pill for "which way am I facing"
+   would shout louder than the world it describes. */
+.x-chip.is-active {
+  background: var(--x-hema-wash);
+  border-color: var(--x-hema-edge);
+  color: var(--x-hema);
+  font-weight: 600;
+}
+
+.x-chip--icon {
+  padding: 0 var(--x-s-snug) 0 var(--x-s-snug);
+}
+
+.x-chip--icon svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  flex: 0 0 auto;
+}
+
+/* The label rides along on wide windows and drops on narrow ones — the icon alone still reads. */
+.x-chip__label {
+  text-transform: capitalize;
+}
+
+@media (max-width: 900px) {
+  .x-chip__label { display: none; }
+  .x-chip { padding: 0 var(--x-s-snug); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .x-chrome,
+  .x-chrome:hover,
+  .x-chrome:focus-within { transform: translateX(-50%); transition: opacity var(--x-t-fast) linear; }
+  .x-chip:active { transform: none; }
+}

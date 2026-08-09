@@ -1,0 +1,461 @@
+/* ============================================================================
+   PRODUCT X — token layer  ·  "Vellum & Conviction"
+   Every value traces to _refs/BRAND-SYSTEM.md, which derives from the ten
+   styles.refero.design systems the user declared as our literal brand identity.
+   Nothing is invented at a call site. Colors were computed in OKLCH and
+   contrast-checked; the measured ratios are in BRAND-SYSTEM.md §4.
+
+   LIGHT ONLY. Dark mode is cut as a product surface (user order).
+   ========================================================================= */
+
+/* Real variable fonts, shipped local — an always-on-top companion must render identically
+   offline, and there is no bandwidth cost when the file is on disk. Axis ranges below were read
+   out of the files' own fvar tables, not guessed. */
+/* `format('truetype-variations')` is a dead string — Chromium rejects the @font-face outright and
+   every one of these silently falls back to system sans, which is exactly what "wrong typography"
+   looks like from the outside. The live syntax is `format('truetype') tech(variations)`, and the
+   bare `format('truetype')` fallback keeps the face loading on any engine that doesn't parse
+   tech(). Verified by rendering, not by reading a spec. */
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('/assets/fonts/InstrumentSans-Variable.ttf') format('truetype') tech(variations),
+       url('/assets/fonts/InstrumentSans-Variable.ttf') format('truetype');
+  font-weight: 400 700;                /* fvar: wght 400–700 (FLOOR is 400), wdth 75–100 */
+  font-stretch: 75% 100%;
+  font-display: block;                 /* block, not swap: no FOUT flash on a desktop shell */
+}
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('/assets/fonts/BricolageGrotesque-Variable.ttf') format('truetype') tech(variations),
+       url('/assets/fonts/BricolageGrotesque-Variable.ttf') format('truetype');
+  font-weight: 200 800;                /* fvar: wght 200–800 (DEFAULT 800), wdth 75–100, opsz 12–96 */
+  font-stretch: 75% 100%;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/assets/fonts/GeistMono-Variable.ttf') format('truetype') tech(variations),
+       url('/assets/fonts/GeistMono-Variable.ttf') format('truetype');
+  font-weight: 100 900;                /* fvar: wght 100–900 */
+  font-display: block;
+}
+
+:root {
+  color-scheme: light;                 /* stop the UA from theming form controls dark */
+
+  /* ── Neutrals: warm light, not warm pigment ──────────────────────────
+     Ten refero systems, zero white page backgrounds. But we are NOT a desert brand — so the
+     warmth is held at OKLCH C=0.0038 (half of a parchment/oatmeal canvas), which reads as warm
+     LIGHT falling on white paper rather than as beige pigment. Enough temperature for light to
+     shade against; not enough to become sand. Colour and aliveness come from --x-aurora-* and
+     the texture layer below, never from the canvas. */
+  --x-bg:        #F5F4F2;   /* the canvas. Never #fff. */
+  --x-surface:   #FDFCFB;   /* a panel ON the canvas */
+  --x-surface-2: #F0EFEB;   /* inset / nested / well */
+  --x-line:      #DFDEDA;   /* the hairline — our elevation device */
+  --x-line-2:    #C8C7C2;   /* emphasised divider, max 1px */
+  --x-ink:       #20222B;   /* 14.42:1. Never #000. */
+  --x-ink-2:     #656973;   /* 5.00:1 — AA body */
+  --x-ink-3:     #90939D;   /* 2.79:1 — NON-TEXT ONLY */
+
+  /* ── The one accent ──────────────────────────────────────────────────
+     Conviction. OKLCH L.500 C.170 h285. Reconciles WIREFRAME-LAW's #6E79FF (3.21:1, fails AA)
+     with Superhuman's Royal Violet #714CB6. The only value in the family that clears AA both as
+     text on the canvas (5.84:1) and with white on it (6.42:1). Rule 4 of the brand: exactly one
+     saturated accent, rationed. */
+  --x-hema:      #5D4DBE;
+  --x-hema-deep: #523FAF;   /* pressed / active — 7.11:1 */
+  --x-hema-wash: color-mix(in oklab, var(--x-hema) 8%,  var(--x-surface));
+  --x-hema-edge: color-mix(in oklab, var(--x-hema) 30%, var(--x-line));
+
+  /* Beautiful and unreadable — glow, gradient and light ONLY, never text, never a fill.
+     This is WIREFRAME-LAW's periwinkle kept where it actually works, per Dimension's rule that
+     Dusk Violet is gradient-only. */
+  --x-lift:      #6E79FF;
+  --x-lift-glow: color-mix(in oklab, var(--x-lift) 34%, transparent);
+
+  /* The near-black pill CTA. WIREFRAME-LAW §1 structure, preserved. White on it: 15.09:1. */
+  --x-pill:      #232630;
+  --x-pill-hi:   #2A2D38;
+
+  /* ── Companion presence ──────────────────────────────────────────────
+     The companion is not chrome and must never wear the accent — otherwise "the app is talking"
+     and "you should act" look identical. One warm hue, used nowhere else. */
+  --x-presence:      #C0724F;
+  --x-presence-wash: color-mix(in oklab, var(--x-presence) 10%, var(--x-surface));
+
+  /* ── ALIVE: the ambient light palette ────────────────────────────────
+     "MODERN MINIMAL, PREMIUM BUT ALSO ALIVE AND CAPTIVATING AND TEXTURED OR CALMING AND WARM."
+     Minimalism goes austere when its only colours are ink and one accent. So colour enters as
+     LIGHT, not as pigment: four high-lightness low-chroma hues that live BEHIND frosted glass,
+     inside gradient blooms, and in the world's atmosphere. Auros and Dimension both do exactly
+     this — saturated aurora gradients under a dark shell; we run the light-mode inverse.
+
+     LAW: these are never a flat fill, never a text colour, never a border. They are light. */
+  --x-aurora-1: #CBCBFF;   /* violet — the accent's own light */
+  --x-aurora-2: #A9E3F1;   /* cyan — cool depth */
+  --x-aurora-3: #C3E9D2;   /* green — calm */
+  --x-aurora-4: #FBD1B8;   /* peach — warmth */
+
+  /* Composed ambient washes. A frosted panel over a FLAT background is just a translucent grey
+     rectangle — this is what actually sells the glass. */
+  --x-ambient-warm: radial-gradient(120% 90% at 12% 4%,  var(--x-aurora-4) 0%, transparent 58%),
+                    radial-gradient(110% 95% at 92% 12%, var(--x-aurora-1) 0%, transparent 62%);
+  --x-ambient-calm: radial-gradient(130% 100% at 88% 0%, var(--x-aurora-2) 0%, transparent 60%),
+                    radial-gradient(120% 90% at 6% 88%,  var(--x-aurora-3) 0%, transparent 64%);
+  --x-ambient-opacity: .55;             /* the whole layer sits under this */
+
+  /* ── TEXTURE ─────────────────────────────────────────────────────────
+     The other half of "textured". A single tiled SVG fibre grain at very low alpha over the
+     canvas: it kills the flat-vector look and the banding in large gradients, and it costs one
+     cached data-URI with no JS. Vellum has tooth. */
+  --x-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+  --x-grain-opacity: .035;              /* felt, never seen */
+
+  /* ── EVIDENCE RAMP — the signature ───────────────────────────────────
+     Product law: "Do not gamify activity. Visualize evidence." So the seven evidence types are
+     ONE hue at climbing chroma: saturation IS certainty, legible across a whole map with no
+     legend and no numbers. Low evidence is MEANT to be quiet.
+     Contrast on Vellum climbs 1.80 → 2.23 → 2.83 → 3.77 → 5.15. */
+  --x-ev-seen:          #B9B8CC;   /* encountered, no retrieval yet — 1.77:1, quiet on purpose */
+  --x-ev-recalled:      #A2A1CB;   /* retrieved once — 2.25:1 */
+  --x-ev-distinguished: #8A8BCB;   /* told apart from a near neighbour — 2.88:1 */
+  --x-ev-applied:       #7071C7;   /* used in a novel case — 3.92:1 */
+  --x-ev-stable:        #5757C3;   /* held across time — full Conviction, 5.37:1 */
+  /* Fading bleeds chroma out to warm grey. It does NOT turn red: nothing in this product turns
+     red or orange to say "you are bad at this". */
+  --x-ev-fading:        #B6B4AF;
+  /* Conflicted is the one warm interrupt. A contradiction is a caution, not a failure. */
+  --x-ev-conflicted:    #A9762E;
+
+  /* ── The four intent districts ───────────────────────────────────────
+     A CATEGORICAL device, not four accents: one shared lightness/chroma envelope
+     (OKLCH L.560 C.115), four hues — so they read as one family, and no district looks more
+     important than another. "I know what kind of thing lives here" before reading a label.
+     This is also where the product earns colour honestly: the map is genuinely multi-hued
+     because its categories are real, not because colour was added for decoration. */
+  --x-discover: #4875B7;   /* 4.24:1 */
+  --x-learn:    #008A71;   /* 3.92:1 */
+  --x-perform:  #AD5944;   /* 4.45:1 */
+  --x-grow:     #8B5FA5;   /* 4.47:1 */
+
+  /* ── Semantic, rationed ──────────────────────────────────────────────
+     Amber is CAUTION, never the brand accent (WIREFRAME-LAW §1 correction). */
+  --x-positive: #188554;   /* 4.23:1 */
+  --x-caution:  #A9762E;   /* 3.59:1 */
+  --x-critical: #B13A38;   /* 5.41:1 — destructive CONFIRMATION only */
+  --x-fog:      #B6B4AF;   /* uncertainty, not failure */
+
+  /* Behind-glass gradient depth. These exist to be BLURRED BEHIND a frosted surface, never used
+     as a flat fill — frosted glass over a flat background is just a translucent grey rectangle. */
+  --x-deep:  #3A3170;
+  --x-bloom: #9AA6FF;
+
+  /* ── Type ───────────────────────────────────────────────────────────
+     ONE voice. Augen Pro, Superpower and Superhuman each run a single family; a characterful
+     second display face is the exception in the refero set, not the rule.
+     User order: Bricolage is NOT the display face — "MAYBE A WORD HERE OR THERE BUT NO." */
+  --x-font-display: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --x-font-ui:      'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --x-font-mono:    'Geist Mono', ui-monospace, 'SF Mono', monospace;
+  --x-font-accent:  'Bricolage Grotesque', 'Instrument Sans', sans-serif;  /* one word, rarely */
+
+  /* Instrument Sans FLOORS AT 400 — the refero 300/350 display weights are physically
+     unreachable. Restraint therefore comes from tracking and width, never from weight. */
+  --x-w-body:    400;
+  --x-w-medium:  500;
+  --x-w-strong:  600;
+
+  /* 8px-derived type scale (Oura's base unit) */
+  --x-fs-11: 0.6875rem; --x-fs-12: 0.75rem;   --x-fs-13: 0.8125rem;
+  --x-fs-14: 0.875rem;  --x-fs-16: 1rem;      --x-fs-19: 1.1875rem;
+  --x-fs-23: 1.4375rem; --x-fs-28: 1.75rem;   --x-fs-33: 2.0625rem;
+  --x-fs-40: 2.5rem;    --x-fs-52: 3.25rem;
+
+  /* Tracking scales negatively with size (Augen −0.0200em uniform; Superpower size-scaled). */
+  --x-tr-micro:   0.08em;    /* eyebrows/caps only */
+  --x-tr-ui:      -0.006em;
+  --x-tr-display: -0.020em;
+  --x-tr-hero:    -0.032em;
+
+  --x-lh-display: 1.06;
+  --x-lh-ui:      1.35;
+  --x-lh-body:    1.55;
+
+  /* ── Space: 8px base unit (Oura), 4px half-step ──────────────────────── */
+  --x-s-hair: 2px;   --x-s-tight: 4px;  --x-s-snug: 8px;   --x-s-base: 12px;
+  --x-s-comfy: 16px; --x-s-loose: 24px; --x-s-wide: 32px;  --x-s-vast: 48px;
+  --x-maxw: 1280px;                     /* Oura's measured max */
+
+  /* ── Radii: the wireframe's measured set. Nothing sharper than 7px. ───── */
+  --x-r-xs:   7px;
+  --x-r-sm:   10px;
+  --x-r-chip: 12px;
+  --x-r-md:   14px;
+  --x-r-menu: 17px;
+  --x-r-lg:   20px;
+  --x-r-xl:   24px;
+  --x-r-2xl:  28px;
+  --x-r-pill: 9999px;                   /* all ten systems agree */
+
+  /* ── ELEVATION — two laws, on purpose ────────────────────────────────
+     Five of ten systems ban drop shadows outright (Augen, Oura, Auros, Dimension, Superpower's
+     "single 2px hairline max"). The user's own wireframe puts 0 17px 38px on its glass chrome.
+     Both are right, for different surfaces:
+
+       CONTENT inside our own window  -> hairline, NO shadow.
+       CHROME floating over the LIVE DESKTOP -> shadow, because it must separate itself from
+       arbitrary unknown content underneath. There it isn't decoration; it's the only thing
+       saying "above the desktop" rather than "pasted into it".                                  */
+  --x-flat:   0 0 0 1px var(--x-line);              /* the default. Use this, not a shadow. */
+  --x-flat-2: 0 0 0 1px var(--x-line-2);
+
+  /* Overlay-only. Wide, low-opacity, ink-TINTED — never neutral black. */
+  --x-e1: 0 1px 2px rgba(32,34,44,.05),  0 2px 8px   rgba(32,34,44,.04);
+  --x-e2: 0 2px 4px rgba(32,34,44,.06),  0 10px 26px rgba(32,34,44,.07);
+  --x-e3: 0 4px 8px rgba(32,34,44,.07),  0 24px 60px rgba(32,34,44,.10);
+  --x-e-menu: 0 17px 38px rgba(25,35,50,.17);       /* wireframe §10, verbatim */
+  --x-e-pill: 0 14px 34px rgba(25,35,50,.18);       /* wireframe §10, verbatim */
+
+  /* Jeton's inverted shadow — lifts from BELOW. The one shadow that describes a physical fact:
+     ground contact. Used for the companion and the dock, nothing else. */
+  --x-e-ground: 0 -4px 16px rgba(32,34,44,.05);
+
+  /* ── Glass. Chrome is translucent; content panels are near-opaque (wireframe §10). ──
+     A white border at high alpha IS the highlight — not an inset shadow.
+     `saturate()` is the Apple tell: real frosted glass amplifies the colour of whatever is behind
+     it. Blur alone gives you grey plastic. That is why the aurora layer exists. */
+  --x-glass-bg:   rgba(241,240,237,.90);
+  --x-glass-edge: 1px solid rgba(255,255,255,.88);
+  --x-glass-hi:   inset 0 1px 0 rgba(255,255,255,.60);
+  --x-glass-blur: blur(20px) saturate(180%);
+  --x-glass-blur-heavy: blur(32px) saturate(200%);   /* thick material, over live desktop */
+  --x-veil:       rgba(245,244,242,.68);            /* scan veil, + blur(4px) */
+  --x-panel-bg:   rgba(253,252,251,.985);
+
+  /* ── INTERNAL GLOW — light that comes from inside the thing ──────────
+     "MAYBE SUBTLE GLOWING AND GRADIENTS OR FLOURESCENT LIKE OR INTERNAL GLOW COMING FROM SELECT
+     THINGS HERE AND THERE… NOT A NEON OR HIGHLIGHTER CIRCUS."
+
+     The rule that keeps it tasteful: GLOW IS EMITTED BY STATE, NEVER APPLIED AS STYLE. A thing
+     glows because it is live, earned, selected, or speaking — so glow always carries information.
+     If you cannot name the state, it does not glow. At most two glowing things on screen at once.
+
+     Each glow is three parts, which is what separates "lit from within" from "neon outline":
+       1. an inner top highlight  — the surface catching its own light
+       2. a tight coloured ring   — the emission at the edge, low alpha
+       3. one wide soft bloom     — the light landing on the air around it                       */
+  --x-glow-accent:
+    inset 0 1px 0 rgba(255,255,255,.62),
+    0 0 0 1px color-mix(in oklab, var(--x-hema) 26%, transparent),
+    0 6px 22px -4px color-mix(in oklab, var(--x-hema) 30%, transparent);
+  --x-glow-presence:                                /* the companion, when it is speaking */
+    inset 0 1px 0 rgba(255,255,255,.60),
+    0 0 0 1px color-mix(in oklab, var(--x-presence) 24%, transparent),
+    0 8px 26px -4px color-mix(in oklab, var(--x-presence) 28%, transparent);
+  --x-glow-earned:                                  /* a bridge illuminating — see NORTH-STAR */
+    inset 0 1px 0 rgba(255,255,255,.66),
+    0 0 0 1px color-mix(in oklab, var(--x-aurora-1) 62%, transparent),
+    0 10px 34px -6px color-mix(in oklab, var(--x-lift) 34%, transparent);
+
+  /* Fluorescent core: the gradient that makes a small element look internally lit rather than
+     painted. Highlight biased to the top-left, colour pooling at the bottom — one light source. */
+  --x-lit-accent: linear-gradient(168deg,
+    color-mix(in oklab, var(--x-hema) 6%, var(--x-surface)) 0%,
+    color-mix(in oklab, var(--x-hema) 17%, var(--x-surface)) 100%);
+  --x-lit-sheen: linear-gradient(180deg, rgba(255,255,255,.50) 0%, rgba(255,255,255,0) 46%);
+
+  /* Breathing rate for anything alive. Slow — a companion at rest, not a notification. */
+  --x-t-breathe: 4200ms;
+
+  /* ── Motion ─────────────────────────────────────────────────────────── */
+  --x-t-fast:  140ms;
+  --x-t-base:  240ms;
+  --x-t-slow:  420ms;
+  --x-t-flip:  450ms;                   /* IMAGINE card flip, wireframe §4 */
+  --x-t-world: 1800ms;
+  --x-ease:      cubic-bezier(.32,.72,0,1);
+  --x-ease-soft: cubic-bezier(.4,0,.2,1);
+
+  /* ── Stacking: one ladder, named. No magic z-indexes at call sites. ──── */
+  --x-z-world:     1;
+  --x-z-board:     10;
+  --x-z-companion: 20;
+  --x-z-card:      30;
+  --x-z-surface:   40;
+  --x-z-chrome:    50;
+  --x-z-popover:   60;
+  --x-z-toast:     70;
+}
+
+/* Dark mode is cut. `data-theme='dark'` and the prefers-color-scheme override are deliberately
+   NOT defined — useTheme.ts still resolves a preference, but there is one visual system and no
+   design decision may be justified by "it also works in dark". */
+
+/* ── Reset, scoped and minimal ────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  /* Transparent, not `--x-bg`. Both windows are transparent overlays — see the long note in app.css.
+     `--x-bg` remains the correct fill for a surface interior; it is never the page. */
+  background: transparent;
+  color: var(--x-ink);
+  font-family: var(--x-font-ui);
+  font-size: var(--x-fs-14);
+  font-weight: var(--x-w-body);
+  line-height: var(--x-lh-ui);
+  letter-spacing: var(--x-tr-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;              /* desktop shell, never a scrolling page */
+  user-select: none;
+}
+
+button, input, textarea, select { font: inherit; color: inherit; letter-spacing: inherit; }
+
+/* Focus is drawn, never defaulted, and never removed. */
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--x-hema);
+  outline-offset: 2px;
+  border-radius: var(--x-r-sm);
+}
+
+/* Contract: reduced motion collapses to opacity-only at the fast duration. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: var(--x-t-fast) !important;
+    transition-property: opacity !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Material utilities ───────────────────────────────────────────────── */
+
+/* The ambient light + grain bed. Put this on the root shell once. Colour reaches the user as
+   light through glass, which is the whole reason the canvas can stay near-neutral. */
+.x-ambient { position: relative; isolation: isolate; }
+.x-ambient::before,
+.x-ambient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+.x-ambient::before {
+  background-image: var(--x-ambient-warm);
+  opacity: var(--x-ambient-opacity);
+}
+.x-ambient::after {
+  background-image: var(--x-grain);
+  background-size: 160px 160px;
+  opacity: var(--x-grain-opacity);
+  mix-blend-mode: multiply;
+}
+.x-ambient--calm::before { background-image: var(--x-ambient-calm); }
+
+/* A content card INSIDE our own window: curved, hairline, no shadow (five of ten refero systems
+   ban drop shadows on panels). The sheen is what keeps it from reading as a flat rectangle. */
+.x-card {
+  background: var(--x-surface);
+  border-radius: var(--x-r-lg);
+  box-shadow: var(--x-flat);
+  position: relative;
+  overflow: hidden;
+}
+.x-card::before {                      /* top-edge sheen — light catching the curve */
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 42%;
+  background: var(--x-lit-sheen);
+  pointer-events: none;
+}
+
+/* Frosted chrome FLOATING OVER THE LIVE DESKTOP. This is the one place a shadow is correct: it is
+   the only thing establishing "above the desktop" rather than "pasted into it". */
+.x-glass {
+  background: var(--x-glass-bg);
+  -webkit-backdrop-filter: var(--x-glass-blur);
+  backdrop-filter: var(--x-glass-blur);
+  border: var(--x-glass-edge);
+  border-radius: var(--x-r-xl);
+  box-shadow: var(--x-glass-hi), var(--x-e-menu);
+}
+.x-glass--thick {
+  -webkit-backdrop-filter: var(--x-glass-blur-heavy);
+  backdrop-filter: var(--x-glass-blur-heavy);
+}
+/* Graceful degradation: without backdrop-filter, translucency reads as washed-out and unreadable,
+   so go opaque instead of shipping a grey smear. */
+@supports not (backdrop-filter: blur(1px)) {
+  .x-glass { background: var(--x-panel-bg); }
+}
+
+/* Glow, by state. If you cannot name the state, do not add these. Max two on screen. */
+.x-lit          { box-shadow: var(--x-glow-accent); }
+.x-lit--presence{ box-shadow: var(--x-glow-presence); }
+.x-lit--earned  { box-shadow: var(--x-glow-earned); }
+.x-lit-fill     { background-image: var(--x-lit-accent); }
+
+/* Alive at rest: a slow bloom, only on things that are genuinely live. Not a pulse, not an alert.
+   Animates opacity of a layer rather than box-shadow, so it stays off the main thread. */
+.x-breathe { position: relative; }
+.x-breathe::after {
+  content: '';
+  position: absolute;
+  inset: -18%;
+  border-radius: inherit;
+  background: radial-gradient(closest-side,
+    color-mix(in oklab, var(--x-lift) 26%, transparent) 0%, transparent 72%);
+  opacity: .34;
+  pointer-events: none;
+  animation: x-breathe var(--x-t-breathe) var(--x-ease-soft) infinite;
+  will-change: opacity, transform;
+}
+@keyframes x-breathe {
+  0%, 100% { opacity: .26; transform: scale(.97); }
+  50%      { opacity: .52; transform: scale(1.03); }
+}
+
+/* ── Type utilities ───────────────────────────────────────────────────── */
+
+/* Display. Instrument Sans at w400 with real negative tracking — Jeton proves w400–500 reads as
+   elegant even at 155px, and Augen Pro runs 350/400 and nothing else. Weight is not the lever. */
+.x-display {
+  font-family: var(--x-font-display);
+  font-weight: var(--x-w-body);
+  font-variation-settings: 'wdth' 100;
+  letter-spacing: var(--x-tr-display);
+  line-height: var(--x-lh-display);
+}
+.x-display--hero { letter-spacing: var(--x-tr-hero); }
+
+/* Dense labels: borrow the width axis instead of shrinking the type. */
+.x-condensed { font-variation-settings: 'wdth' 82; }
+
+/* ONE WORD, RARELY. Bricolage defaults to wght 800 / opsz 96 — the most dangerous default in the
+   stack and the exact opposite of the brand — so both axes are pinned here. Never a full heading. */
+.x-accent-word {
+  font-family: var(--x-font-accent);
+  font-variation-settings: 'wght' 340, 'opsz' 40, 'wdth' 100;
+  font-weight: 340;
+  letter-spacing: var(--x-tr-display);
+}
+
+.x-mono { font-family: var(--x-font-mono); font-variant-numeric: tabular-nums; }
+
+/* An eyebrow that encodes a real category, not decoration. */
+.x-eyebrow {
+  font-family: var(--x-font-ui);
+  font-size: var(--x-fs-11);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+  font-weight: var(--x-w-medium);
+}

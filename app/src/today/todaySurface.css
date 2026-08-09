@@ -1,0 +1,609 @@
+/* Today. One decision, given room; everything else compressed into a scannable queue.
+   Every color here is a --x-* token. No hex, no rgba() literal, by rule.
+
+   ══ THE GOVERNING CONSTRAINT ══════════════════════════════════════════════════
+   This renders in a TRANSPARENT always-on-top window over the student's real desktop. The shell
+   paints nothing. So there is no canvas: every visible pixel comes from a surface in this file, and
+   anything without a frosted backing is type on someone's wallpaper.
+
+   ══ WHY THIS FILE DEFINES ITS OWN FILL RATHER THAN USING .x-glass ═════════════
+   `.x-glass` is the right *system*, but its fill token `--x-glass-bg` is 90% opaque and `--x-veil` is
+   68%. Both were authored when the window had an opaque `--x-bg` canvas behind them, where high alpha
+   is free. On a transparent window that same 90% is an opaque sheet over the user's screen — measured:
+   with `.x-glass` on the lead card, a synthetic desktop pattern behind the page was completely erased.
+
+   So this file keeps every glass *token* — `--x-glass-edge`, `--x-glass-hi`, `--x-glass-blur*`,
+   `--x-e-menu`, `--x-lit-sheen` — and replaces only the fill, composed from `--x-surface` via
+   `color-mix(… transparent)` so it is still tokens all the way down.
+
+   The two alphas are contrast-derived, not taste. Worst case is a pure-black desktop behind the panel:
+     hero  68% of --x-surface over black -> relative luminance .41 -> 7.0:1 against --x-ink
+     pane  58% of --x-surface over black -> relative luminance .30 -> 5.3:1 against --x-ink
+   Both clear AA for body text against the worst backdrop that exists, and any lighter desktop only
+   improves them. 32–42% of the desktop still reads through, which is what makes it glass.
+
+   ══ THE MATERIAL LADDER ═══════════════════════════════════════════════════════
+     HERO (.x-today__lead)  — heavy blur, 68% fill, its own aurora wash, --x-e-menu. Exactly one.
+     PANE (.x-today__pane)  — standard blur, 58% fill, sheen only, --x-e2.
+     ROW                    — no fill of its own. Rows live in a pane, divided by hairlines, so the
+                              queue has one left edge and one right rail instead of N floating slabs.
+*/
+
+.x-today {
+  /* ONE measure for the whole surface. Every pane shares this edge, so the stack reads as a column
+     even though the panes are separate floating objects. 56rem lands the fs-19 prose at ~62–68
+     characters, the readable band; the surface this replaces had no measure and ran to 1223px. */
+  --x-today-col: 56rem;
+
+  /* The two fills. See the contrast derivation in the header comment. */
+  --x-today-fill-hero: color-mix(in oklab, var(--x-surface) 68%, transparent);
+  --x-today-fill-pane: color-mix(in oklab, var(--x-surface) 58%, transparent);
+  --x-today-hairline:  color-mix(in oklab, var(--x-line) 62%, transparent);
+
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* NO `scrollbar-width` / `scrollbar-color` here, deliberately. In Chromium 121+ (this is Electron 33
+     = Chromium 130) specifying either switches the scrollbar to the standard renderer and the
+     ::-webkit-scrollbar rules below are ignored outright — which is exactly why a grey thumb was
+     visible on the right edge at 1899px. The pseudo-elements are the only way to get a track that is
+     genuinely transparent and a thumb that only exists on hover. */
+}
+.x-today::-webkit-scrollbar { width: 8px; }
+.x-today::-webkit-scrollbar-track { background: transparent; }
+.x-today::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--x-r-pill);
+  background-clip: content-box;
+  transition: background-color var(--x-t-base) var(--x-ease-soft);
+}
+/* Appears only while the pointer is on the surface. Over a transparent window a resting scrollbar is
+   a grey stick floating on the desktop. */
+.x-today:hover::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklab, var(--x-line-2) 78%, transparent);
+}
+
+.x-today__inner {
+  width: min(var(--x-today-col), 100%);
+  margin: 0 auto;
+  padding: var(--x-s-loose) var(--x-s-comfy) var(--x-s-vast);
+  display: flex;
+  flex-direction: column;
+  /* Panes are separate floating objects, so the gap must read as air between cards. */
+  gap: var(--x-s-comfy);
+}
+
+/* ── The secondary pane material ─────────────────────────────────────────────── */
+
+.x-today__pane {
+  position: relative;
+  isolation: isolate;              /* lets the sheen sit at z-index -1: above the fill, below content */
+  overflow: hidden;                /* clips the sheen and the rows to the corner curve */
+  background-color: var(--x-today-fill-pane);
+  -webkit-backdrop-filter: var(--x-glass-blur);
+  backdrop-filter: var(--x-glass-blur);
+  border: var(--x-glass-edge);
+  border-radius: var(--x-r-xl);
+  box-shadow: var(--x-glass-hi), var(--x-e2);
+}
+
+/* Light catching the top curve. This one gradient is most of what separates "frosted glass" from
+   "a translucent grey rectangle". */
+.x-today__pane::before,
+.x-today__lead::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 40%;
+  z-index: -1;
+  background-image: var(--x-lit-sheen);
+  pointer-events: none;
+}
+
+/* Without backdrop-filter a translucent fill over an unknown desktop is an illegible smear, so go
+   near-opaque instead of shipping one. Mirrors the guard tokens.css puts on .x-glass. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .x-today__pane { background-color: var(--x-panel-bg); }
+  .x-today__lead { background-color: var(--x-panel-bg); }
+}
+
+/* A pane header. Three devices give it weight over its own rows: the eyebrow's uppercase
+   micro-tracking, a darker ink than the row metadata, and a rule that gives the section a real top
+   edge — which is the fix for "headers are the same weight as the rows". */
+.x-today__paneHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--x-s-base);
+  padding: 0 var(--x-s-snug) var(--x-s-snug);
+  border-bottom: 1px solid var(--x-today-hairline);
+}
+.x-today__paneHead .x-eyebrow { color: var(--x-ink-2); }
+
+.x-today__paneCount { font-size: var(--x-fs-11); color: var(--x-ink-3); }
+
+/* ── The lead recommendation: the one hero object ──────────────────────────────
+   The greeting used to be its own slab above this card, which read as a debug div with a hard edge
+   stopping mid-sentence. A salutation is not a card, so it is now this card's first line — which also
+   puts something in the top-right space the old header wasted. */
+
+.x-today__lead {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: var(--x-s-loose);
+  padding-left: var(--x-s-wide);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-base);
+
+  background-color: var(--x-today-fill-hero);
+  /* The aurora wash, moved off the shell and onto the surface that earns it. Diluted from the tokens
+     rather than reusing --x-ambient-warm at full strength, because at full strength on a panel this
+     size it stops being light and becomes pigment. This is the only place on the surface with an
+     internal gradient — one hero, per the rationing rule. */
+  background-image:
+    radial-gradient(120% 90% at 10% 0%,
+      color-mix(in oklab, var(--x-aurora-4) 30%, transparent) 0%, transparent 58%),
+    radial-gradient(110% 95% at 94% 8%,
+      color-mix(in oklab, var(--x-aurora-1) 30%, transparent) 0%, transparent 62%);
+  -webkit-backdrop-filter: var(--x-glass-blur-heavy);
+  backdrop-filter: var(--x-glass-blur-heavy);
+  border: var(--x-glass-edge);
+  border-radius: var(--x-r-2xl);
+  box-shadow: var(--x-glass-hi), var(--x-e-menu);
+
+  /* The conviction hue arrives as --conviction from the component, set from the model's mastery.
+     Defaulted here so the card is never unstyled if it renders without one. */
+  --conviction: var(--x-ev-seen);
+}
+
+/* A hairline of conviction down the leading edge. Saturation is certainty: this single stripe says how
+   sure the model is with no number, no legend and no progress bar. */
+.x-today__lead::after {
+  content: '';
+  position: absolute;
+  inset: var(--x-s-loose) auto var(--x-s-loose) 0;
+  width: 3px;
+  border-radius: var(--x-r-pill);
+  background: linear-gradient(
+    to bottom,
+    var(--conviction),
+    color-mix(in oklab, var(--conviction) 35%, transparent)
+  );
+}
+
+/* The metadata bar: greeting on the left, what kind of move this is plus the conviction dot on the
+   right. Both are eyebrows, so neither competes with the titles. */
+.x-today__leadHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--x-s-comfy);
+  flex-wrap: wrap;
+  padding-bottom: var(--x-s-snug);
+  border-bottom: 1px solid var(--x-today-hairline);
+}
+
+.x-today__leadMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--x-s-snug);
+}
+
+/* The one glowing thing at rest. It glows because a state emits it — the conviction level — and the
+   bloom is a pseudo-element opacity animation rather than an animated box-shadow, so it stays off the
+   main thread. */
+.x-today__conviction {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--x-r-pill);
+  background: var(--conviction);
+  flex: none;
+}
+.x-today__conviction::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: inherit;
+  background: radial-gradient(circle, color-mix(in oklab, var(--conviction) 42%, transparent), transparent 70%);
+  animation: x-today-pulse var(--x-t-breathe) var(--x-ease-soft) infinite;
+}
+
+@keyframes x-today-pulse {
+  0%, 100% { opacity: .45; transform: scale(.92); }
+  50%      { opacity: .95; transform: scale(1.06); }
+}
+
+/* The kicker. Smaller than the move title on purpose: it frames the decision, the subject name IS the
+   decision. A small line over a large title is the oldest editorial hierarchy there is. */
+.x-today__h1 {
+  margin: 0;
+  font-size: var(--x-fs-19);
+  letter-spacing: var(--x-tr-display);
+  color: var(--x-ink-2);
+}
+
+.x-today__leadTitle {
+  margin: 0;
+  /* Scales continuously instead of stepping at a breakpoint — this window is user-resizable and gets
+     dragged through every width between 480 and 1900. */
+  font-size: clamp(var(--x-fs-28), 3.4vw, var(--x-fs-40));
+  letter-spacing: var(--x-tr-display);
+  line-height: var(--x-lh-display);
+  color: var(--x-ink);
+}
+
+.x-today__interpretation {
+  margin: 0;
+  /* The measure. `min()` so it also holds at 480px, where 62ch is wider than the window. */
+  max-width: min(100%, 62ch);
+  font-size: clamp(var(--x-fs-16), 1.3vw, var(--x-fs-19));
+  line-height: var(--x-lh-body);
+  color: var(--x-ink);
+}
+
+.x-today__action {
+  margin: 0;
+  max-width: min(100%, 68ch);
+  font-size: var(--x-fs-16);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+}
+
+/* ── The opening question ─────────────────────────────────────────────────────
+   A well inside the glass. Translucent rather than a flat --x-surface-2 fill, so the blur behind the
+   card still reaches it and it reads as recessed glass, not a pasted grey box. */
+
+.x-today__prompt {
+  margin-top: var(--x-s-tight);
+  padding: var(--x-s-comfy);
+  border-radius: var(--x-r-lg);
+  background-color: color-mix(in oklab, var(--x-surface-2) 55%, transparent);
+  box-shadow: var(--x-flat);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+}
+
+.x-today__q {
+  margin: 0;
+  max-width: min(100%, 68ch);
+  font-size: var(--x-fs-16);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink);
+  font-weight: var(--x-w-medium);
+}
+
+.x-today__a {
+  margin: 0;
+  max-width: min(100%, 70ch);
+  font-size: var(--x-fs-14);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+  /* Fades in rather than appearing — a hard swap reads as a page change, not a reveal. */
+  animation: x-today-fade var(--x-t-base) var(--x-ease-soft) both;
+}
+
+@keyframes x-today-fade {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* The retrieval gate. This is load-bearing product behaviour, not decoration: revealing the answer
+   immediately turns retrieval practice into reading and produces no evidence the model can use. */
+.x-today__reveal {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  padding: var(--x-s-hair) 0;
+  font: inherit;
+  font-size: var(--x-fs-13);
+  color: var(--x-hema);
+  cursor: pointer;
+  border-bottom: 1px solid color-mix(in oklab, var(--x-hema) 32%, transparent);
+  transition: border-color var(--x-t-fast) var(--x-ease-soft);
+}
+.x-today__reveal:hover { border-bottom-color: var(--x-hema); }
+
+/* ── The pearl ────────────────────────────────────────────────────────────── */
+
+.x-today__pearl {
+  display: flex;
+  gap: var(--x-s-base);
+  margin: 0;
+  max-width: min(100%, 68ch);
+  font-size: var(--x-fs-14);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+  font-style: italic;
+}
+
+.x-today__pearlMark {
+  flex: none;
+  width: 2px;
+  border-radius: var(--x-r-pill);
+  background: var(--x-hema-edge);
+}
+
+/* ── Lead footer: the CTA and the evidence disclosure ─────────────────────── */
+
+.x-today__leadFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--x-s-comfy);
+  flex-wrap: wrap;
+  margin-top: var(--x-s-tight);
+}
+
+/* Near-black pill. All ten reference systems agree on the pill radius; the near-black fill is the one
+   high-contrast element on the surface and it is rationed to exactly this button. It is also the one
+   element allowed to be opaque — a primary action must not be legibility-dependent on the wallpaper. */
+.x-today__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--x-s-snug);
+  border: 0;
+  border-radius: var(--x-r-pill);
+  padding: var(--x-s-snug) var(--x-s-comfy);
+  background: var(--x-pill);
+  color: var(--x-surface);
+  font: inherit;
+  font-size: var(--x-fs-14);
+  font-weight: var(--x-w-medium);
+  cursor: pointer;
+  box-shadow: var(--x-e-pill);
+  transition: transform var(--x-t-fast) var(--x-ease-soft),
+              background-color var(--x-t-fast) var(--x-ease-soft);
+}
+.x-today__cta:hover { background: var(--x-ink); transform: translateY(-1px); }
+.x-today__cta:active { transform: none; }
+
+.x-today__ctaTime {
+  font-size: var(--x-fs-12);
+  opacity: .72;
+  /* A hairline divider instead of a bullet — the time is a separate fact, not part of the verb. */
+  padding-left: var(--x-s-snug);
+  border-left: 1px solid color-mix(in oklab, var(--x-surface) 28%, transparent);
+}
+
+.x-today__why { display: flex; flex-direction: column; gap: var(--x-s-snug); }
+
+.x-today__whyBtn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: var(--x-fs-13);
+  color: var(--x-ink-2);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--x-line-2);
+  text-underline-offset: 3px;
+  transition: color var(--x-t-fast) var(--x-ease-soft);
+}
+.x-today__whyBtn:hover { color: var(--x-ink); }
+
+.x-today__whyBody {
+  flex-basis: 100%;
+  padding: var(--x-s-comfy);
+  border-radius: var(--x-r-md);
+  background-color: color-mix(in oklab, var(--x-surface-2) 55%, transparent);
+  box-shadow: var(--x-flat);
+  animation: x-today-fade var(--x-t-base) var(--x-ease-soft) both;
+}
+
+.x-today__whyLine {
+  margin: 0 0 var(--x-s-snug);
+  font-size: var(--x-fs-13);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+  max-width: min(100%, 70ch);
+}
+/* --x-ink-3 is a NON-TEXT token in the brand system (2.79:1) and over an unknown desktop it is worse
+   than it is on a canvas. Real sentences use --x-ink-2; only chips and counts stay at ink-3. */
+.x-today__whyLine--muted { margin-bottom: 0; }
+
+.x-today__evidence {
+  list-style: none;
+  margin: 0 0 var(--x-s-snug);
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--x-s-tight);
+}
+.x-today__evidence li {
+  font-size: var(--x-fs-11);
+  color: var(--x-ink-2);
+  background-color: color-mix(in oklab, var(--x-surface) 66%, transparent);
+  border-radius: var(--x-r-chip);
+  padding: 2px var(--x-s-snug);
+  box-shadow: var(--x-flat);
+}
+
+/* ── The queue ────────────────────────────────────────────────────────────────
+   ONE pane holding rows, not N floating cards, and the columns are declared on the LIST with rows
+   opting in via `subgrid`. That distinction is the whole fix for defect 1: `max-content` resolves per
+   grid container, so when every row was its own grid the name column was a different width in every
+   row and the topics never lined up. With subgrid the tracks are shared, so the list has real columns.
+   Chromium 117+; this ships on Electron 33 = Chromium 130. */
+
+.x-today__queuePane {
+  padding: var(--x-s-comfy) var(--x-s-comfy) var(--x-s-snug);
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-snug);
+}
+
+.x-today__queueNote {
+  margin: 0 var(--x-s-snug);
+  max-width: min(100%, 72ch);
+  font-size: var(--x-fs-13);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+}
+
+.x-today__queue {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  /* conviction bar | subject (takes the slack) | kind | time | affordance */
+  grid-template-columns: 3px minmax(0, 1fr) max-content max-content 28px;
+  column-gap: var(--x-s-comfy);
+}
+
+.x-today__row {
+  --conviction: var(--x-ev-seen);
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: center;
+  /* Vertical padding only. Horizontal padding on a subgrid item eats into the first and last shared
+     tracks, which would put the conviction bars back out of alignment. The list's own padding does
+     the insetting instead. */
+  padding: var(--x-s-base) 0;
+  transition: background-color var(--x-t-fast) var(--x-ease-soft);
+}
+/* A real border, not an offset box-shadow. A `0 -1px` shadow follows the element's border-radius and
+   renders as two curved arcs at the ends instead of a rule — observed in the first screenshot round. */
+.x-today__row + .x-today__row { border-top: 1px solid var(--x-today-hairline); }
+
+.x-today__row:hover { background-color: color-mix(in oklab, var(--x-surface) 55%, transparent); }
+
+.x-today__rowBar {
+  align-self: stretch;
+  border-radius: var(--x-r-pill);
+  background: var(--conviction);
+  min-height: 22px;
+}
+
+.x-today__rowMain { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+.x-today__rowTitle {
+  font-size: var(--x-fs-14);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink);
+}
+
+.x-today__rowWhy {
+  font-size: var(--x-fs-12);
+  color: var(--x-ink-2);
+  /* Truncate rather than reflow the row height — a list whose rhythm changes per item reads as noise. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.x-today__rowKind {
+  font-size: var(--x-fs-11);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+  white-space: nowrap;
+}
+
+.x-today__rowTime {
+  font-size: var(--x-fs-12);
+  color: var(--x-ink-2);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.x-today__rowGo {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--x-r-pill);
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--x-ink-3);
+  transition: background-color var(--x-t-fast) var(--x-ease-soft),
+              color var(--x-t-fast) var(--x-ease-soft);
+}
+.x-today__row:hover .x-today__rowGo {
+  background-color: color-mix(in oklab, var(--x-surface-2) 76%, transparent);
+  color: var(--x-ink);
+}
+
+/* Chevron in CSS: one less asset, and it inherits currentColor for free. */
+.x-today__chev {
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-top: 1.5px solid currentColor;
+  transform: rotate(45deg) translate(-1px, 1px);
+}
+
+/* ── Footer and empty state ───────────────────────────────────────────────────
+   The honest note about what the model does not know. Hugs its text so it reads as a quiet aside
+   rather than a full-width status bar — but still on glass, because nothing here may be naked. */
+
+.x-today__foot,
+.x-today__empty {
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  padding: var(--x-s-base) var(--x-s-comfy);
+  border-radius: var(--x-r-lg);
+}
+.x-today__foot { box-shadow: var(--x-glass-hi), var(--x-e1); }
+
+.x-today__empty { display: flex; flex-direction: column; gap: var(--x-s-tight); }
+
+.x-today__emptyTitle {
+  margin: 0;
+  font-size: var(--x-fs-23);
+  letter-spacing: var(--x-tr-display);
+  color: var(--x-ink);
+}
+
+.x-today__honest {
+  margin: 0;
+  max-width: min(100%, 72ch);
+  font-size: var(--x-fs-12);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+}
+.x-today__empty .x-today__honest { font-size: var(--x-fs-14); }
+
+/* ── Responsive ───────────────────────────────────────────────────────────────
+   The window is user-resizable from ~1900px to 480px and every width between is real. The measure
+   handles the top end; these steps handle the bottom. */
+
+@media (max-width: 900px) {
+  .x-today__lead { padding: var(--x-s-comfy); padding-left: var(--x-s-loose); }
+  .x-today__lead::after { inset: var(--x-s-comfy) auto var(--x-s-comfy) 0; }
+}
+
+@media (max-width: 720px) {
+  .x-today__inner { padding: var(--x-s-comfy) var(--x-s-base) var(--x-s-wide); }
+  .x-today__queuePane { padding: var(--x-s-base) var(--x-s-base) var(--x-s-snug); }
+  /* Kind drops before the subject does — the subject name is what you scan for. */
+  .x-today__queue { grid-template-columns: 3px minmax(0, 1fr) max-content 28px; column-gap: var(--x-s-base); }
+  .x-today__rowKind { display: none; }
+}
+
+@media (max-width: 480px) {
+  .x-today__inner { gap: var(--x-s-base); }
+  .x-today__queue { grid-template-columns: 3px minmax(0, 1fr) 28px; column-gap: var(--x-s-snug); }
+  .x-today__rowTime { display: none; }
+  .x-today__leadFoot { gap: var(--x-s-base); }
+  /* At this width a fit-content plate is the full width anyway; stop it looking accidental. */
+  .x-today__foot,
+  .x-today__empty { width: 100%; }
+}
+
+/* Motion is a courtesy, never a requirement. */
+@media (prefers-reduced-motion: reduce) {
+  .x-today__conviction::before { animation: none; opacity: .7; }
+  .x-today__a,
+  .x-today__whyBody { animation: none; }
+  .x-today__cta:hover { transform: none; }
+  .x-today__row { transition: none; }
+}

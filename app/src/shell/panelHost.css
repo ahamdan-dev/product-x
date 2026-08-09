@@ -1,0 +1,112 @@
+/* The panel layer. Every value is a token; nothing is invented here. */
+
+/**
+ * The lazy-load placeholder.
+ *
+ * `position: fixed` with the panel's real geometry, so the frosted rectangle appears exactly where the
+ * panel is about to be and nothing shifts when the chunk lands. `ui/Surface` is also `position: fixed`,
+ * which is what makes the swap invisible.
+ *
+ * z-index matches the floor `ui/Surface` uses for its own stacking (`40 + order`), so a loading panel
+ * sits with the panels rather than under the surface they float over.
+ */
+.x-panelHost__settling {
+  position: fixed;
+  z-index: var(--x-z-surface);
+  border-radius: var(--x-r-lg);
+  /* A slow breath, so a cold chunk load reads as loading rather than as a frozen empty box. */
+  animation: x-panelHost-settle var(--x-t-breathe) var(--x-ease-soft) infinite;
+}
+
+@keyframes x-panelHost-settle {
+  0%, 100% { opacity: .55; }
+  50%      { opacity: .85; }
+}
+
+/**
+ * ── Panel glass, thinned ──────────────────────────────────────────────────────
+ *
+ * `display: contents` — a wrapper purely to carry a selector, contributing no box of its own, so
+ * `ui/Surface`'s `position: fixed` still resolves against the viewport exactly as before.
+ *
+ * Why the override exists: `--x-glass-bg` is tuned for the small chrome pills (a nav rail, a dock bar)
+ * where 90% opacity over a few hundred px still lets the desktop read through at the edges. Scaled up
+ * to a 460x620 panel the same fill is a solid sheet — measured over the synthetic desktop, where the
+ * stripes vanished entirely behind the Library. Panels therefore take a thinner mix and a heavier blur:
+ * *less* fill so the desktop shows through, *more* blur so text stays legible on top of whatever that
+ * desktop happens to be. Both derived from tokens with `color-mix`, so no literal enters the file.
+ *
+ * The extra saturate is the Apple tell — real frosted glass amplifies the colour behind it. Without it
+ * a thin fill just looks like weak grey plastic.
+ */
+.x-panelHost__panel { display: contents; }
+
+.x-panelHost__panel > .x-surface.is-glass {
+  background: color-mix(in oklab, var(--x-glass-bg) 62%, transparent);
+  -webkit-backdrop-filter: blur(34px) saturate(190%);
+  backdrop-filter: blur(34px) saturate(190%);
+  /* The white top edge IS the highlight that makes it read as a physical pane rather than as a blur
+     filter applied to a rectangle. It matters more, not less, as the fill gets thinner. */
+  border: var(--x-glass-edge);
+  box-shadow: var(--x-glass-hi), var(--x-e-menu);
+}
+
+/* Without backdrop-filter a thin fill is an unreadable smear, so go near-opaque instead. */
+@supports not (backdrop-filter: blur(1px)) {
+  .x-panelHost__panel > .x-surface.is-glass { background: var(--x-panel-bg); }
+}
+
+/* ── Panel-specific interiors ─────────────────────────────────────────────────
+   Only the two adapters need any: the other four panels bring their own from panels.css. */
+
+.x-imagine-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-base);
+}
+
+/* Where the pivot is coming from. Context, so it is quiet — but the subject itself is emphasised,
+   because that is the one word the learner needs to verify at a glance. */
+.x-imagine-panel__from {
+  font-size: var(--x-fs-13);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-2);
+  padding: var(--x-s-snug) var(--x-s-base);
+  background: var(--x-surface-2);
+  border-radius: var(--x-r-sm);
+}
+
+.x-imagine-panel__from strong {
+  font-weight: var(--x-w-strong);
+  color: var(--x-ink);
+}
+
+/* What is NOT built, stated plainly. Sits above a hairline so it reads as a footnote to the panel
+   rather than as an error inside it. */
+.x-imagine-panel__honest {
+  font-size: var(--x-fs-12);
+  line-height: var(--x-lh-body);
+  color: var(--x-ink-3);
+  padding-top: var(--x-s-snug);
+  border-top: 1px solid var(--x-line);
+}
+
+/* The companion picker is a fixed-height row of 3D previews; it manages its own internal padding. */
+.x-companion-panel {
+  display: flex;
+  min-height: 0;
+}
+
+/* The picker's own padding assumes a page, not a panel — trim it so the cards are not floating in a
+   moat inside an already-padded surface body. */
+.x-companion-panel .picker-root {
+  padding: 0;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+/* Below ~700px the three picker cards cannot sit side by side without each becoming a sliver, so they
+   wrap into a scrollable column instead of squeezing. */
+@media (max-width: 700px) {
+  .x-companion-panel .picker-card { max-width: none; }
+}

@@ -1,0 +1,243 @@
+/* ============================================================================
+   IMAGINE — lateral pivot picker + flip cards
+   Brand: tokens.css only, light mode, curved corners, frosted glass, hairlines.
+   Flip: 3D transform, GPU-only, respects prefers-reduced-motion.
+   ========================================================================= */
+
+.imagine-root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-loose);
+  padding: var(--x-s-loose);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── Pivot Picker ─────────────────────────────────────────────────────── */
+.imagine-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-base);
+}
+
+.imagine-picker__title {
+  font-size: var(--x-fs-19);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink);
+  letter-spacing: var(--x-tr-display);
+}
+
+.imagine-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--x-s-snug);
+}
+
+.imagine-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--x-s-base) var(--x-s-comfy);
+  background: var(--x-surface);
+  border-radius: var(--x-r-chip);
+  box-shadow: var(--x-flat);
+  cursor: pointer;
+  transition: all var(--x-t-fast) var(--x-ease);
+  border: none;
+  text-align: left;
+  min-width: 220px;
+}
+
+.imagine-chip:hover {
+  box-shadow: var(--x-flat), var(--x-e1);
+  transform: translateY(-1px);
+}
+
+.imagine-chip:active {
+  transform: translateY(0);
+}
+
+.imagine-chip__label {
+  font-size: var(--x-fs-14);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink);
+  line-height: var(--x-lh-ui);
+}
+
+.imagine-chip__reason {
+  font-size: var(--x-fs-12);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-ui);
+}
+
+/* ── Card Grid ────────────────────────────────────────────────────────── */
+.imagine-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--x-s-comfy);
+}
+
+/* ── Flip Card Container ──────────────────────────────────────────────── */
+.imagine-card-container {
+  perspective: 1400px;
+  height: 340px;
+  cursor: pointer;
+}
+
+.imagine-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform var(--x-t-flip) var(--x-ease);
+  transform-style: preserve-3d;
+}
+
+.imagine-card-container.is-flipped .imagine-card-inner {
+  transform: rotateY(180deg);
+}
+
+/* ── Card Faces ───────────────────────────────────────────────────────── */
+.imagine-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+
+  /* x-card utility: curved, hairline, sheen */
+  background: var(--x-surface);
+  border-radius: var(--x-r-lg);
+  box-shadow: var(--x-flat);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  padding: var(--x-s-comfy);
+  gap: var(--x-s-base);
+}
+
+/* Top-edge sheen — light catching the curve */
+.imagine-card-face::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 42%;
+  background: var(--x-lit-sheen);
+  pointer-events: none;
+}
+
+.imagine-card-face--back {
+  transform: rotateY(180deg);
+}
+
+/* ── Card Header ──────────────────────────────────────────────────────── */
+.imagine-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--x-s-snug);
+  position: relative;
+  z-index: 1;
+}
+
+.imagine-card-kind {
+  font-size: var(--x-fs-11);
+  letter-spacing: var(--x-tr-micro);
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+  font-weight: var(--x-w-medium);
+}
+
+.imagine-card-pin {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--x-ink-3);
+  transition: color var(--x-t-fast) var(--x-ease);
+  font-size: var(--x-fs-16);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imagine-card-pin:hover {
+  color: var(--x-hema);
+}
+
+/* ── Card Content ─────────────────────────────────────────────────────── */
+.imagine-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--x-s-base);
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+}
+
+.imagine-card-title {
+  font-size: var(--x-fs-16);
+  font-weight: var(--x-w-medium);
+  color: var(--x-ink);
+  line-height: var(--x-lh-ui);
+}
+
+.imagine-card-text {
+  font-size: var(--x-fs-14);
+  color: var(--x-ink-2);
+  line-height: var(--x-lh-body);
+}
+
+.imagine-card-text--primary {
+  color: var(--x-ink);
+  font-weight: var(--x-w-medium);
+}
+
+/* ── Hint ─────────────────────────────────────────────────────────────── */
+.imagine-card-hint {
+  font-size: var(--x-fs-12);
+  color: var(--x-ink-3);
+  text-align: center;
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Pin Action Feedback ──────────────────────────────────────────────── */
+.imagine-card-container.is-pinned .imagine-card-pin {
+  color: var(--x-hema);
+}
+
+.imagine-card-container.is-pinned .imagine-card-face {
+  box-shadow: var(--x-glow-accent);
+}
+
+/* ── Reduced Motion ───────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .imagine-card-inner {
+    transition: opacity var(--x-t-fast) var(--x-ease);
+  }
+
+  .imagine-card-container.is-flipped .imagine-card-inner {
+    transform: none;
+  }
+
+  /* In reduced motion, swap faces via opacity instead of 3D flip */
+  .imagine-card-container.is-flipped .imagine-card-face--front {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .imagine-card-face--back {
+    transform: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .imagine-card-container.is-flipped .imagine-card-face--back {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

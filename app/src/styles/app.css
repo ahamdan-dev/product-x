@@ -1,0 +1,85 @@
+/* ============================================================================
+   Shell. Reset, both window bodies, and the canvas host. Nothing decorative.
+   ========================================================================= */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/**
+ * BOTH windows are transparent, not just the companion.
+ *
+ * This is an always-on-top desktop product, and the user's constraint is that it "CAND OBSCURE THE
+ * USERS SCREEN OR FUNCTION". A page background here is the one line of CSS that would turn the whole
+ * app back into an opaque rectangle parked over the student's UWorld tab — so there is no page
+ * background anywhere, at any route. Everything the user sees is a surface that carries its own
+ * frosted fill, and the pixels between surfaces are the user's real desktop.
+ *
+ * `--x-bg` still exists and is still correct — it is the fill for *surfaces*, not for the page.
+ */
+body {
+  font-family: var(--x-font-ui);
+  font-size: var(--x-fs-14);
+  line-height: var(--x-lh-ui);
+  color: var(--x-ink);
+  background: transparent;
+  /* Greyscale AA renders lighter and more evenly on the frosted surfaces than subpixel does; on a
+     transparent window subpixel AA also fringes against whatever is behind it. */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+h1, h2, h3, h4, p { margin: 0; }
+button { font: inherit; color: inherit; }
+
+/* Focus is visible everywhere, and it is the same ring everywhere. */
+:focus-visible {
+  outline: 2px solid var(--x-hema);
+  outline-offset: 2px;
+  border-radius: var(--x-r-sm);
+}
+
+/* ── World view shell ─────────────────────────────────────────────────────── */
+
+/* No fill: the board floats on the desktop. See the note on `body` above. */
+.x-world {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background: transparent;
+}
+
+.x-world__canvas {
+  position: absolute;
+  inset: 0;
+  /* The canvas takes pointer events for camera lean; floating surfaces sit above it. */
+  touch-action: none;
+}
+
+/* Boot state. Three seconds of nothing is how a desktop app reads as broken, so the shell states
+   what it is doing in one line and no spinner. */
+.x-boot {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--x-font-mono);
+  font-size: var(--x-fs-12);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+}
+
+/* ── Companion window shell ───────────────────────────────────────────────── */
+
+.x-companion {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background: transparent;
+}

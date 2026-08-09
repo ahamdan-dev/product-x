@@ -1,0 +1,105 @@
+/* The surface switcher. Every value is a token; nothing is invented here. */
+
+.x-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--x-s-snug);
+  padding: var(--x-s-base) var(--x-s-comfy) 0;
+  flex: none;
+}
+
+/* A recessed track, not a raised bar: the moving pill is what gets the lift, so the rail behind it
+   reads as a groove. `--x-surface-2` + a hairline is the whole material — no shadow, per the brand
+   rule that content inside our own window uses hairlines (five of the ten reference systems ban
+   drop shadows outright). */
+.x-nav__rail {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: var(--x-s-hair);
+  padding: var(--x-s-tight);
+  background: var(--x-surface-2);
+  border-radius: var(--x-r-pill);
+  box-shadow: var(--x-flat);
+  /* Fixed width so the pill's 1/n translate is exact and the tabs don't resize as labels change. */
+  width: min(340px, 100%);
+}
+
+/* The one sliding indicator. Sized to a fraction of the track and translated by index, so adding a
+   surface needs no new CSS — though the product law says there will not be a fourth. */
+.x-nav__pill {
+  position: absolute;
+  top: var(--x-s-tight);
+  bottom: var(--x-s-tight);
+  left: var(--x-s-tight);
+  width: calc((100% - var(--x-s-tight) * 2 - var(--x-s-hair) * (var(--n) - 1)) / var(--n));
+  transform: translateX(calc((100% + var(--x-s-hair)) * var(--i)));
+  border-radius: var(--x-r-pill);
+  background: var(--x-surface);
+  /* This IS a raised element within a groove, so it earns a contact shadow — and the internal
+     top-edge highlight is what makes it read as physical rather than as a white rectangle. */
+  box-shadow: var(--x-glass-hi), var(--x-e1);
+  transition: transform var(--x-t-base) var(--x-ease);
+  will-change: transform;
+}
+
+.x-nav__tab {
+  position: relative;             /* above the pill */
+  z-index: 1;
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: var(--x-s-snug) var(--x-s-base);
+  border-radius: var(--x-r-pill);
+  font-size: var(--x-fs-13);
+  font-weight: var(--x-w-medium);
+  letter-spacing: var(--x-tr-ui);
+  color: var(--x-ink-2);
+  cursor: pointer;
+  /* Colour only — the pill owns all the movement. */
+  transition: color var(--x-t-fast) var(--x-ease-soft);
+}
+
+.x-nav__tab:hover { color: var(--x-ink); }
+
+.x-nav__tab[aria-selected='true'] {
+  color: var(--x-ink);
+  font-weight: var(--x-w-strong);
+}
+
+/* The question the active surface answers. Deliberately quiet: it is context, not a heading.
+
+   ══ WHY IT CARRIES ITS OWN BACKING ═════════════════════════════════════════════
+   Measured, not assumed: a capture over a synthetic desktop (`X_BEHIND=desktop`) showed this line as
+   bare type sitting directly on magenta/teal wallpaper — illegible, and the click-through probe
+   confirmed the row claimed nothing, i.e. it was visually ours and functionally the desktop's.
+
+   Two separate problems, one cause. This is an always-on-top overlay, so there is no canvas behind
+   text: `--x-ink-3` is documented in tokens.css as "2.79:1 — NON-TEXT ONLY", which was a safe call
+   against a known `--x-bg` and is not one against an arbitrary desktop. So the chip supplies a local
+   backdrop, and the ink steps up to `--x-ink-2` (5.00:1) now that there is something to measure
+   against. Fill is composed from `--x-surface` rather than `--x-glass-bg`, whose 90% alpha was
+   authored for an opaque canvas and would read as a solid slab out here.
+
+   `width: max-content` matters: a full-width bar would put an opaque band across the screen for the
+   sake of four words. The chip is exactly as wide as its text and no wider. */
+.x-nav__question {
+  margin: 0;
+  text-align: center;
+  /* Reserve the line so switching surfaces cannot shift the layout underneath. */
+  min-height: 1.2em;
+  width: max-content;
+  max-width: 100%;
+  padding: var(--x-s-hair) var(--x-s-snug);
+  border-radius: var(--x-r-pill);
+  color: var(--x-ink-2);
+  background: color-mix(in oklab, var(--x-surface) 62%, transparent);
+  -webkit-backdrop-filter: var(--x-glass-blur);
+  backdrop-filter: var(--x-glass-blur);
+}
+
+/* Reduced motion: tokens.css already forces transitions to opacity-only, which would leave the pill
+   snapping to position. That is the correct outcome here — an instant move is honest, and no
+   position is ever half-applied. */

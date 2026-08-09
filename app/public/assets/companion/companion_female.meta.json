@@ -1,0 +1,18 @@
+{
+  "gender": "female",
+  "clips": [
+    "idle.breathe",
+    "idle.lookAround",
+    "locomote.stroll",
+    "locomote.walk",
+    "locomote.jog",
+    "locomote.run",
+    "study.walkReading",
+    "celebrate.small",
+    "celebrate.milestone",
+    "celebrate.rare"
+  ],
+  "source_fps": 30,
+  "tris": 1622,
+  "bones": 22
+}

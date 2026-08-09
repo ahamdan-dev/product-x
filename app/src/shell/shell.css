@@ -1,0 +1,63 @@
+/* The window shell. */
+
+/**
+ * The shell paints NOTHING. It is a layout box over the user's desktop.
+ *
+ * This is an always-on-top overlay, so a fill here — even the ambient wash, which is otherwise the
+ * right call — becomes an opaque sheet covering whatever the student is actually reading. Verified with
+ * a screenshot taken over a synthetic desktop pattern (`X_BEHIND=desktop node tools/shot.cjs`): with
+ * `--x-bg` here the pattern was completely hidden, which is the definition of obscuring their screen.
+ *
+ * The ambient wash existed so frosted glass had something to refract instead of flat grey. On a
+ * transparent window the *desktop itself* plays that role, and it does it better — real content behind
+ * real glass, which is the effect the wash was imitating. So the wash moves onto the surfaces, and the
+ * space between surfaces belongs to the user.
+ */
+.x-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;              /* a desktop shell, never a scrolling page */
+}
+
+/* `.x-ambient` is still the correct utility for a *surface* interior, but on the shell root its
+   full-bleed pseudo-elements are exactly the opaque sheet described above. Neutralized here rather
+   than by removing the class, so any surface that opts into the wash still gets it. */
+.x-shell.x-ambient::before,
+.x-shell.x-ambient::after {
+  content: none;
+}
+
+.x-shell__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;                 /* lets a surface scroll internally instead of growing the shell */
+  display: flex;
+}
+
+/* Each surface fills the stage. `hidden` does the hiding — `display: none` is applied by the UA for
+   [hidden], and unlike opacity/visibility it also removes the subtree from the a11y tree and from
+   hit-testing, which is exactly right for an inactive tab panel. */
+.x-shell__surface {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.x-shell__surface[hidden] { display: none; }
+
+/* The load placeholder: a faint breath of the ambient light, so the frame is never an empty box.
+   No spinner — on a fast local import a spinner appears and disappears, which reads as a glitch. */
+.x-shell__settling {
+  flex: 1;
+  background: var(--x-ambient-calm);
+  opacity: .28;
+  animation: x-settling var(--x-t-breathe) var(--x-ease-soft) infinite;
+}
+
+@keyframes x-settling {
+  0%, 100% { opacity: .20; }
+  50%      { opacity: .38; }
+}
